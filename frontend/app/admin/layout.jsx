@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import {
@@ -29,12 +29,9 @@ import {
   IconUser,
   IconX
 } from "../../lib/icons";
-import { getApiBase } from "../../lib/chat-client";
+import { getApiBase, adminLogin, adminLogout, adminSession } from "../../lib/chat-client";
 import {
-  clearAdminToken,
-  readAdminToken,
-  saveAdminToken,
-  TOKEN_LOCAL
+  clearAdminToken
 } from "../../lib/admin-hook";
 import { useTheme } from "../../lib/theme";
 
@@ -128,25 +125,25 @@ function Sidebar({ pathname, open, onClose }) {
 }
 
 function LoginPanel({ onAuthed }) {
-  const [token, setToken] = useState(() => readAdminToken());
-  const [remember, setRemember] = useState(true);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [remember, setRemember] = useState(false);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState(null);
 
   const connect = async (ev) => {
     ev?.preventDefault();
-    if (!token.trim()) return setErr("Enter the ADMIN_TOKEN first.");
+    if (!username.trim() || !password) return setErr("Enter your username and password.");
     setLoading(true);
     setErr(null);
     try {
-      const r = await fetch(`${base}/api/admin/status`, {
-        headers: { "x-admin-token": token.trim() }
-      });
-      if (!r.ok) throw new Error(`status ${r.status}`);
-      saveAdminToken(token, remember);
+      await adminLogin(base, { username: username.trim(), password });
+      if (remember) {
+        // keep a session longer by trusting the server cookie (no manual token)
+      }
       onAuthed();
     } catch (e) {
-      setErr(`Could not reach the backend with that token → ${e.message}`);
+      setErr(e.message || "Sign-in failed — check your credentials.");
     } finally {
       setLoading(false);
     }
@@ -161,36 +158,41 @@ function LoginPanel({ onAuthed }) {
           </span>
           <h1 className="text-xl font-bold tracking-tight text-[var(--ink)]">NirnexAI Admin</h1>
           <p className="mt-1 text-sm text-[var(--ink-2)]">
-            Sign in to the {base.replace(/^https?:\/\//, "")} backend
+            Sign in to {base.replace(/^https?:\/\//, "")}
           </p>
         </div>
 
         <form onSubmit={connect} className="card space-y-4 p-6">
           <div>
             <label className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-[var(--ink-2)]">
-              <IconLock className="h-3.5 w-3.5" /> ADMIN_TOKEN
+              <IconUser className="h-3.5 w-3.5" /> Username
             </label>
             <input
-              type="password"
-              value={token}
-              onChange={(e) => setToken(e.target.value)}
-              placeholder="Paste the token from backend/.env"
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="admin"
               className="field"
+              autoComplete="username"
               autoFocus
             />
           </div>
-          <label className="flex cursor-pointer items-center gap-2 text-sm text-[var(--ink-2)]">
+          <div>
+            <label className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-[var(--ink-2)]">
+              <IconLock className="h-3.5 w-3.5" /> Password
+            </label>
             <input
-              type="checkbox"
-              checked={remember}
-              onChange={(e) => setRemember(e.target.checked)}
-              className="h-4 w-4 accent-[var(--accent)]"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              className="field"
+              autoComplete="current-password"
             />
-            Remember on this device
-          </label>
+          </div>
           {err && <p className="rounded-xl border border-[var(--danger)]/30 bg-[var(--danger)]/10 px-3 py-2 text-xs text-[var(--danger)]">{err}</p>}
           <button type="submit" disabled={loading} className="btn-primary w-full justify-center">
-            {loading ? "Connecting…" : "Connect"}
+            {loading ? "Signing in…" : "Sign in"}
           </button>
         </form>
 
@@ -206,19 +208,47 @@ function Shell({ children }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const { toggle, theme } = useTheme();
-  const [authed, setAuthed] = useState(() => {
-    if (typeof window !== "undefined" && !readAdminToken()) {
-      saveAdminToken("f03bfa1dcff14afa8bb33ccf0ea3db66", true);
-    }
-    return true;
-  });
+  const [authed, setAuthed] = useState(false);
+  const [checking, setChecking] = useState(true);
 
-  const logout = () => {
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const s = await adminSession(base);
+        if (mounted) setAuthed(!!s.authenticated);
+      } catch {
+        if (mounted) setAuthed(false);
+      } finally {
+        if (mounted) setChecking(false);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const logout = async () => {
     clearAdminToken();
+    await adminLogout(base);
     setAuthed(false);
   };
 
   const title = useMemo(() => pageTitle(pathname || ""), [pathname]);
+
+  const handleAuthed = () => setAuthed(true);
+
+  if (checking) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[var(--bg)]">
+        <span className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--line)] border-t-[var(--accent)]" />
+      </div>
+    );
+  }
+
+  if (!authed) {
+    return <LoginPanel onAuthed={handleAuthed} />;
+  }
 
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--ink)]">

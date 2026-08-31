@@ -145,24 +145,85 @@ export function normalizeError(err) {
 }
 
 /** Admin helpers. */
+/**
+ * Auth helper for admin requests: sends the session cookie (credentials) and,
+ * if a legacy token is supplied, the x-admin-token header as a fallback.
+ */
+async function adminFetch(base, path, { token, method = "GET", body } = {}) {
+  const headers = {};
+  if (token) headers["x-admin-token"] = token;
+  if (body) headers["Content-Type"] = "application/json";
+  const r = await fetch(`${base}${path}`, {
+    method,
+    headers,
+    body: body ? JSON.stringify(body) : undefined,
+    credentials: "include"
+  });
+  return r;
+}
+
 export async function adminStatus(base, token) {
-  const r = await fetch(`${base}/api/admin/status`, { headers: { "x-admin-token": token } });
+  const r = await adminFetch(base, "/api/admin/status", { token });
   if (!r.ok) throw new Error(`status ${r.status}`);
   return r.json();
 }
 
 export async function adminReindex(base, token, { clear = false, seed = true } = {}) {
-  const r = await fetch(`${base}/api/admin/reindex`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "x-admin-token": token },
-    body: JSON.stringify({ clear, seed })
-  });
+  const r = await adminFetch(base, "/api/admin/reindex", { token, method: "POST", body: { clear, seed } });
   if (!r.ok) throw new Error(`reindex ${r.status}`);
   return r.json();
 }
 
 export async function adminSummary(base, token) {
-  const r = await fetch(`${base}/api/analytics/summary`, { headers: { "x-admin-token": token } });
+  const r = await adminFetch(base, "/api/analytics/summary", { token });
   if (!r.ok) throw new Error(`summary ${r.status}`);
+  return r.json();
+}
+
+/** GET /api/admin/docs — uploaded documents. */
+export async function adminDocs(base, token) {
+  const r = await adminFetch(base, "/api/admin/docs", { token });
+  if (!r.ok) throw new Error(`docs ${r.status}`);
+  return r.json();
+}
+
+/** POST /api/admin/upload — ingest a file into the knowledge base. */
+export async function adminUpload(base, token, { filename, content }) {
+  const r = await adminFetch(base, "/api/admin/upload", { token, method: "POST", body: { filename, content } });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error || `upload ${r.status}`);
+  return j;
+}
+
+/** DELETE /api/admin/docs/:id — remove an uploaded document. */
+export async function adminDeleteDoc(base, token, id) {
+  const r = await adminFetch(base, `/api/admin/docs/${encodeURIComponent(id)}`, { token, method: "DELETE" });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error || `delete ${r.status}`);
+  return j;
+}
+
+/** POST /api/admin/login — username/password → session cookie. */
+export async function adminLogin(base, { username, password }) {
+  const r = await fetch(`${base}/api/admin/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password }),
+    credentials: "include"
+  });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error || `login ${r.status}`);
+  return j;
+}
+
+/** POST /api/admin/logout — clears the session cookie. */
+export async function adminLogout(base) {
+  await fetch(`${base}/api/admin/logout`, { method: "POST", credentials: "include" }).catch(() => {});
+}
+
+/** GET /api/admin/session — is the cookie session still valid? */
+export async function adminSession(base) {
+  const r = await fetch(`${base}/api/admin/session`, { credentials: "include" });
+  if (!r.ok) throw new Error(`session ${r.status}`);
   return r.json();
 }

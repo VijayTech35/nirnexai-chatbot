@@ -12,7 +12,12 @@ import { loadKb } from "./knowledge/site.js";
 loadKb();
 
 const app = express();
-app.use(cors({ origin: config.corsOrigin === "*" ? true : config.corsOrigin }));
+const corsOrigin = config.corsOrigin;
+const corsOpts =
+  corsOrigin.length === 1 && corsOrigin[0] === "*"
+    ? { origin: true }
+    : { origin: corsOrigin, credentials: true };
+app.use(cors(corsOpts));
 app.use(express.json({ limit: "1mb" }));
 
 // ---------- simple request log (2 entries for the admin surface) ----------

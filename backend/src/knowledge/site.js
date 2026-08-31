@@ -8,7 +8,7 @@ const require = createRequire(import.meta.url);
 export function loadKb() {
   if (typeof globalThis.NIRNEX_KB === "undefined" || !globalThis.NIRNEX_KB.length) {
     try {
-      globalThis.NIRNEX_KB = require("../../../knowledge-base.js");
+      globalThis.NIRNEX_KB = require("../../../legacy/knowledge-base.js");
     } catch (e) {
       console.warn("[seed] knowledge-base.js not found:", e.message);
       globalThis.NIRNEX_KB = [];

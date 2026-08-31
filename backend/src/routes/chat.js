@@ -10,6 +10,12 @@ const router = Router();
 
 const HEARTBEAT_MS = 15000;
 const chatLimiter = rateLimit({ windowMs: 15 * 60_000, max: config.chatRateMax });
+const sessionLimiter = rateLimit({
+  windowMs: 15 * 60_000,
+  max: config.chatRateMax * 2,
+  keyFn: (req) => `sess:${req.body?.sessionId || "default"}`,
+  name: "session"
+});
 
 // ---------- helpers ----------
 function sse(res, event, payload) {
@@ -116,7 +122,7 @@ router.get("/history", (req, res) => {
 });
 
 // ---------- POST /api/chat ----------
-router.post("/", chatLimiter, async (req, res) => {
+router.post("/", chatLimiter, sessionLimiter, async (req, res) => {
   const { messages = [], sessionId } = req.body || {};
   const userMsg = [...messages].reverse().find((m) => m.role === "user");
 

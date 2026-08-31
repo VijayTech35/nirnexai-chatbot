@@ -50,7 +50,13 @@ export const config = {
   mock: bool(process.env.MOCK, false),
 
   adminToken: process.env.ADMIN_TOKEN || "change-me-to-a-secret",
+  adminUser: process.env.ADMIN_USER || "admin",
+  adminPass: process.env.ADMIN_PASS || "",
   dataDir: path.resolve(__dirname, "..", process.env.DATA_DIR || "./data"),
 
-  corsOrigin: process.env.CORS_ORIGIN || "*"
+  // CORS: comma-separated allow-list of origins. Semicolon-safe when empty.
+  corsOrigin: (process.env.CORS_ORIGIN || "*")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean)
 };

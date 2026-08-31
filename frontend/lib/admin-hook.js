@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { adminReindex, adminStatus, adminSummary } from "./chat-client";
+import { adminReindex, adminSession, adminStatus, adminSummary } from "./chat-client";
 
 export const TOKEN_SESSION = "nirnex_admin_token_session";
 export const TOKEN_LOCAL = "nirnex_admin_token";
@@ -38,7 +38,6 @@ export function useAdmin(base, token) {
   const [error, setError] = useState(null);
 
   const refresh = useCallback(async () => {
-    if (!token.trim()) return;
     setLoading(true);
     setError(null);
     try {
@@ -57,7 +56,6 @@ export function useAdmin(base, token) {
 
   const reindex = useCallback(
     async ({ clear = false } = {}) => {
-      if (!token.trim()) return;
       setBusy(true);
       setError(null);
       try {
@@ -75,13 +73,13 @@ export function useAdmin(base, token) {
   );
 
   const warmup = useCallback(async () => {
-    if (!token.trim()) return;
     setBusy(true);
     setError(null);
     try {
       const r = await fetch(`${base}/api/admin/warmup`, {
         method: "POST",
-        headers: { "x-admin-token": token.trim() }
+        headers: token.trim() ? { "x-admin-token": token.trim() } : {},
+        credentials: "include"
       });
       if (!r.ok) throw new Error(`warmup ${r.status}`);
       return await r.json();

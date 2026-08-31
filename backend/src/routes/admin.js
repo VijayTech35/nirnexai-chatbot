@@ -7,16 +7,54 @@ import { extractTextFromFile, isSupported } from "../services/upload.js";
 import { chunkText } from "../utils/text.js";
 import { sha1 } from "../utils/hash.js";
 import { rateLimit } from "../utils/rate-limit.js";
+import {
+  cookieValue,
+  createSession,
+  destroySession,
+  isValidSession,
+  SESSION_COOKIE
+} from "../utils/session.js";
+
+import { auth } from "../middleware/auth.js";
 
 const router = Router();
 const reindexLimiter = rateLimit({ windowMs: 60 * 60_000, max: 5 });
 const uploadLimiter = rateLimit({ windowMs: 60 * 60_000, max: 40 });
+const loginLimiter = rateLimit({ windowMs: 15 * 60_000, max: 20 });
 
-function auth(req, res, next) {
-  const token = req.headers["x-admin-token"];
-  if (config.mock || (token && token === config.adminToken)) return next();
-  return res.status(401).json({ error: "unauthorized: set ADMIN_TOKEN in your request header x-admin-token" });
-}
+/**
+ * POST /api/admin/login — credential sign-in. Sets an HttpOnly session cookie.
+ * Body: { username, password }
+ */
+router.post("/login", loginLimiter, (req, res) => {
+  const { username, password } = req.body || {};
+  const okUser = config.mock || (username && username === config.adminUser);
+  const okPass = config.mock || (password && config.adminPass && password === config.adminPass);
+  if (!okUser || !okPass) {
+    // do NOT reveal which part was wrong
+    return res.status(401).json({ error: "invalid username or password" });
+  }
+  const token = createSession();
+  res.setHeader("Set-Cookie", `${SESSION_COOKIE}=${token}; HttpOnly; Path=/; SameSite=Lax; Max-Age=${12 * 60 * 60}`);
+  res.json({ ok: true, expiresIn: 12 * 60 * 60 });
+});
+
+/** POST /api/admin/logout — clear the session cookie. */
+router.post("/logout", (req, res) => {
+  destroySession(cookieValue(req.headers.cookie, SESSION_COOKIE));
+  res.setHeader("Set-Cookie", `${SESSION_COOKIE}=; HttpOnly; Path=/; SameSite=Lax; Max-Age=0`);
+  res.json({ ok: true });
+});
+
+/** GET /api/admin/session — is there a valid session? (used by the UI on boot) */
+router.get("/session", (req, res) => {
+  const cookieTok = cookieValue(req.headers.cookie, SESSION_COOKIE);
+  const authed = config.mock || (cookieTok && isValidSession(cookieTok));
+  res.json({
+    authenticated: !!authed,
+    cookieAuth: !!cookieTok && isValidSession(cookieTok)
+  });
+});
 
 const UPLOAD_PREFIX = "upload:";
 

@@ -3,6 +3,7 @@ import fs from "fs";
 import path from "path";
 import { config } from "../config.js";
 import { rateLimit } from "../utils/rate-limit.js";
+import { auth } from "../middleware/auth.js";
 
 const router = Router();
 const file = path.join(config.dataDir, "analytics.jsonl");
@@ -40,10 +41,7 @@ router.post("/", beaconLimiter, (req, res) => {
 });
 
 /** GET /api/analytics/summary — admin summary (top questions, fallbacks, feedback, leads). */
-router.get("/summary", (req, res) => {
-  if (req.headers["x-admin-token"] !== config.adminToken) {
-    return res.status(401).json({ error: "unauthorized" });
-  }
+router.get("/summary", auth, (req, res) => {
   const events = readAll();
   const counts = {};
   const fallbacks = [];
