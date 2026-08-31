@@ -12,6 +12,9 @@ import { loadKb } from "./knowledge/site.js";
 loadKb();
 
 const app = express();
+// Trust the X-Forwarded-For header (set by the Caddy/nginx reverse proxy) so
+// per-IP rate limiting and logging see the real client IP, not the proxy.
+app.set("trust proxy", config.trustProxy);
 const corsOrigin = config.corsOrigin;
 const corsOpts =
   corsOrigin.length === 1 && corsOrigin[0] === "*"

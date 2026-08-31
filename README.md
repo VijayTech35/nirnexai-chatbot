@@ -47,7 +47,7 @@ npm run dev -p 3002
 ```
 
 - Chat UI: `http://localhost:3002/`
-- Admin panel: `http://localhost:3002/admin` (paste `ADMIN_TOKEN`, then Load → reindex, analytics, status)
+- Admin panel: `http://localhost:3002/admin` (sign in with `ADMIN_USER` / `ADMIN_PASS`)
 
 ### 3. Widget embed (drop-in for any site)
 
@@ -71,10 +71,19 @@ The widget still answers purely from the KB when no backend is configured. With
 | `GET /health` | — | Liveness + mock flag |
 | `POST /api/chat` | — | Streaming SSE chat. Body `{ messages, sessionId }`. Events: `meta`, `delta`, `citations`, `done`, `error` |
 | `POST /api/analytics` | — | Beacon `{ type, q, ... }` → `data/analytics.jsonl` |
-| `GET /api/analytics/summary` | `x-admin-token` | Top questions, fallbacks, feedback |
-| `GET /api/admin/status` | `x-admin-token` | Store size, models, mock flag |
-| `POST /api/admin/reindex` | `x-admin-token` | Rebuild index (seed KB + crawl) `{ clear?, urls? }` |
-| `POST /api/admin/warmup` | `x-admin-token` | Ensure index exists |
+| `GET /api/analytics/summary` | session cookie | Top questions, fallbacks, feedback |
+| `GET /api/admin/status` | session cookie | Store size, models, mock flag |
+| `POST /api/admin/reindex` | session cookie | Rebuild index (seed KB + crawl) `{ clear?, urls? }` |
+| `POST /api/admin/warmup` | session cookie | Ensure index exists |
+| `POST /api/admin/login` | — | Username/password → HttpOnly session cookie |
+| `POST /api/admin/logout` | session cookie | Destroy the session |
+| `GET /api/admin/session` | — | Is there a valid session? |
+| `GET /api/admin/docs` | session cookie | List uploaded documents |
+| `POST /api/admin/upload` | session cookie | Ingest an uploaded file |
+| `DELETE /api/admin/docs/:id` | session cookie | Remove an uploaded document |
+
+> Admin endpoints accept the session cookie **or** the legacy `x-admin-token`
+> header (`ADMIN_TOKEN`) as a fallback.
 
 ## Configuration (`backend/.env`)
 
@@ -94,9 +103,10 @@ The widget still answers purely from the KB when no backend is configured. With
 | `FIRECRAWL_API_KEY` | — | Use Firecrawl for JS-rendered pages |
 | `USE_SEED_KB` | `true` | Seed the store from `knowledge-base.js` |
 | `MOCK` | `false` | Hash embeddings + canned streamed answers |
-| `ADMIN_TOKEN` | — | Bearer-style header `x-admin-token` |
+| `ADMIN_USER` | `admin` | Admin console username (sign-in cookie) |
+| `ADMIN_PASS` | — | Admin console password (sign-in cookie) |
 | `DATA_DIR` | `./data` | `vectors.json` + `analytics.jsonl` |
-| `CORS_ORIGIN` | `*` | |
+| `CORS_ORIGIN` | `*` | Comma-separated browser origins allowed (must be explicit for cookies) |
 
 ## How retrieval works
 
@@ -111,7 +121,48 @@ The widget still answers purely from the KB when no backend is configured. With
    out-of-scope reply, and buy-intent → `https://cal.com/nirnexai` /
    `info@nirnexai.com`.
 
-## Deployment notes
+## Deployment
+
+### Docker (recommended)
+
+The stack ships with `docker-compose.yml` + `backend/Dockerfile` +
+`frontend/Dockerfile` + `deploy/Caddyfile`. Caddy acts as a single reverse
+proxy: the browser only talks to Caddy, which routes `/api/*` + `/health*` to
+the backend and everything else to the Next.js frontend. API calls are
+same-origin, so CORS is minimized and the admin session cookie flows cleanly.
+
+```bash
+# 1. Configure secrets (real values, not the examples)
+cp backend/.env.example backend/.env        # OPENROUTER_API_KEY, ADMIN_USER, ADMIN_PASS
+cp deploy/compose.env.example .env          # CADDY_DOMAIN (empty = plain HTTP :80)
+
+# 2. Build + start
+docker compose up -d --build
+docker compose ps                            # all three: healthy
+
+# 3. Visit
+#   http://<server>/            (chat UI)
+#   http://<server>/admin       (admin console)
+```
+
+Set `CADDY_DOMAIN=chat.yourdomain.com` (and `CADDY_EMAIL`) in `.env` and
+rebuild to get automatic HTTPS via Let's Encrypt:
+
+```bash
+docker compose up -d --build --force-recreate caddy
+```
+
+Notes:
+
+- Backend runs as a non-root user with a `/health` Docker healthcheck; only its
+  internal ports are exposed on the `nirnex` bridge network. The persistent
+  vector store / conversations live in the `backend-data` volume.
+- The frontend uses Next.js `output: "standalone"` for a small runtime image.
+- For scale: change `VECTOR_STORE=pinecone` in `backend/.env` and supply the
+  Pinecone credentials. Admin sessions and rate-limits are currently in-memory
+  (single-instance); move to Redis before running multiple backend replicas.
+
+### Manual / without Docker
 
 - **Vector store**: start with `memory`; move to Pinecone for scale
   (`VECTOR_STORE=pinecone` + `PINECONE_API_KEY` / `PINECONE_INDEX`, via `.env`).
@@ -121,7 +172,7 @@ The widget still answers purely from the KB when no backend is configured. With
 - **Frontend**: `frontend` uses `output: "standalone"`; run the production build
   with `node .next/standalone/server.js`. Any Next.js page must call the backend
   over HTTPS for production.
-- **Widget**: `build.ps1` regenerates the one-file `dist/nirnex-chatbot.js`.
+- Put `nginx`, `caddy`, or a load balancer in front serving TLS.
 
 ## Tests
 

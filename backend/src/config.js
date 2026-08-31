@@ -58,5 +58,9 @@ export const config = {
   corsOrigin: (process.env.CORS_ORIGIN || "*")
     .split(",")
     .map((s) => s.trim())
-    .filter(Boolean)
+    .filter(Boolean),
+
+  // Express "trust proxy" value. "1" = trust the first X-Forwarded-For hop
+  // (the Caddy/nginx reverse proxy). 0 disables (direct exposure).
+  trustProxy: process.env.TRUST_PROXY == null ? 1 : parseInt(process.env.TRUST_PROXY, 10)
 };

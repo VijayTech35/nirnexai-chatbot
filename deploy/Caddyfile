@@ -1,0 +1,43 @@
+# NirnexAI Caddy reverse proxy.
+#
+# Site address comes from the CADDY_DOMAIN env var (see docker-compose.yml).
+#   - CADDY_DOMAIN unset/empty -> Caddy listens on :80 and serves plain HTTP
+#     using the "http://" placeholder site address. Good for local/dev or
+#     behind your own TLS terminator.
+#   - CADDY_DOMAIN=chat.nirnexai.com -> Caddy obtains an automatic Let's
+#     Encrypt certificate and serves HTTPS. Set CADDY_EMAIL too.
+#
+# The browser only ever talks to Caddy. /api/* and /health* are reverse-proxied
+# to the backend; everything else goes to the Next.js frontend. API calls are
+# therefore same-origin, so minimal CORS is needed and the admin session cookie
+# flows cleanly.
+
+{$CADDY_DOMAIN:http://} {
+	# Serve the Next.js frontend for everything except API + health.
+	@frontend {
+		not path /api/*
+		not path /health*
+	}
+	handle @frontend {
+		reverse_proxy {$FRONTEND_UPSTREAM:frontend:3002}
+	}
+
+	# Proxy API calls to the backend (same-origin for the browser).
+	handle /api/* {
+		reverse_proxy {$BACKEND_UPSTREAM:backend:4000}
+	}
+
+	handle /health* {
+		reverse_proxy {$BACKEND_UPSTREAM:backend:4000}
+	}
+
+	encode gzip
+
+	header {
+		-Server
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "same-origin"
+		X-XSS-Protection "0"
+	}
+}

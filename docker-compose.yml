@@ -1,0 +1,84 @@
+# NirnexAI chatbot — production stack
+#
+#   backend   (Express RAG server, port 4000, internal)
+#   frontend  (Next.js app, port 3002, internal)
+#   caddy     (reverse proxy, TLS, routes /api/* to backend, / to frontend)
+#
+# Browser talks to Caddy only → same-origin API calls, minimal CORS, and the
+# admin session cookie works cleanly behind one host.
+#
+# Usage:
+#   cp backend/.env.example backend/.env   # then set real values (see below)
+#   docker compose up -d --build
+#   # -> http://localhost  (or your server host)
+
+services:
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    environment:
+      # Behind the proxy the browser calls the Caddy origin, so allow it.
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost}
+    volumes:
+      - backend-data:/app/data
+    expose:
+      - "4000"
+    networks:
+      - nirnex
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # Same-origin: the browser reaches the backend through the proxy.
+        NEXT_PUBLIC_API_URL: /
+    restart: unless-stopped
+    environment:
+      PORT: 3002
+      HOSTNAME: 0.0.0.0
+    expose:
+      - "3002"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - nirnex
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - FRONTEND_UPSTREAM=frontend:3002
+      - BACKEND_UPSTREAM=backend:4000
+      # Set CADDY_DOMAIN for automatic HTTPS (e.g. chat.nirnexai.com).
+      # Leave empty to serve plain HTTP on :80 for local/dev.
+      - CADDY_DOMAIN=${CADDY_DOMAIN:-}
+      - CADDY_EMAIL=${CADDY_EMAIL:-}
+    volumes:
+      - caddy-data:/data
+      - caddy-config:/config
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+    depends_on:
+      - frontend
+    networks:
+      - nirnex
+
+networks:
+  nirnex:
+    driver: bridge
+
+volumes:
+  backend-data:
+  caddy-data:
+  caddy-config:
