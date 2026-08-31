@@ -1,0 +1,19 @@
+# Windows
+Thumbs.db
+Desktop.ini
+
+# Node
+node_modules/
+*.log
+
+# Build output
+.next/
+dist/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Runtime data (vector store, conversations, analytics)
+backend/data/

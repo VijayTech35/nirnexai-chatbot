@@ -1,0 +1,616 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ==================================================================
+   NirnexAI Design System
+   Dark-first tokens; light theme via [data-theme="light"].
+   Shared by the public console and the admin dashboard.
+   ================================================================== */
+
+:root {
+  --bg: #09090b;
+  --panel: #111217;
+  --panel-2: #17181d;
+  --panel-3: #1d1e24;
+  --line: #23242b;
+  --line-soft: #1a1b21;
+  --ink: #ffffff;
+  --ink-2: #a1a1aa;
+  --ink-3: #71717a;
+  --accent: #10b981;
+  --accent-strong: #059669;
+  --accent-soft: #34d399;
+  --accent-glow: rgba(16, 185, 129, 0.22);
+  --accent-veil: rgba(16, 185, 129, 0.08);
+  --danger: #f87171;
+  --warn: #fbbf24;
+  --shadow-lg: 0 24px 60px -24px rgba(0, 0, 0, 0.7);
+  --radius: 16px;
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  --bg: #fafafa;
+  --panel: #ffffff;
+  --panel-2: #f6f6f7;
+  --panel-3: #ececef;
+  --line: #e4e4e7;
+  --line-soft: #efeff1;
+  --ink: #18181b;
+  --ink-2: #52525b;
+  --ink-3: #a1a1aa;
+  --accent: #059669;
+  --accent-strong: #047857;
+  --accent-soft: #10b981;
+  --accent-glow: rgba(5, 150, 105, 0.2);
+  --accent-veil: rgba(5, 150, 105, 0.07);
+  --shadow-lg: 0 24px 60px -24px rgba(24, 24, 27, 0.18);
+  color-scheme: light;
+}
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    font-family: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    transition: background-color 0.25s ease, color 0.25s ease;
+  }
+  ::selection {
+    background: var(--accent);
+    color: #06281c;
+  }
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--line) transparent;
+  }
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--line);
+    border-radius: 8px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--ink-3);
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+@layer components {
+  /* ---- surfaces (theme-aware) ---- */
+  .t-bg {
+    background: var(--bg);
+  }
+  .t-panel {
+    background: var(--panel);
+    border-color: var(--line);
+  }
+  .t-panel-2 {
+    background: var(--panel-2);
+    border-color: var(--line);
+  }
+  .t-ink {
+    color: var(--ink);
+  }
+  .t-sub {
+    color: var(--ink-2);
+  }
+  .t-faint {
+    color: var(--ink-3);
+  }
+  .glass {
+    background: color-mix(in srgb, var(--panel) 72%, transparent);
+    backdrop-filter: blur(16px) saturate(1.4);
+    -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  }
+
+  /* ---- buttons ---- */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50;
+    background: var(--accent);
+    color: #052e1d;
+    box-shadow: 0 8px 28px -8px var(--accent-glow), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  }
+  .btn-primary:hover:not(:disabled) {
+    background: var(--accent-soft);
+    transform: translateY(-1px);
+    box-shadow: 0 12px 34px -10px var(--accent-glow), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  }
+  .btn-primary:active:not(:disabled) {
+    transform: translateY(0);
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border px-5 py-2.5 text-sm font-medium transition-all duration-200;
+    border-color: var(--line);
+    color: var(--ink-2);
+    background: color-mix(in srgb, var(--panel) 60%, transparent);
+  }
+  .btn-ghost:hover:not(:disabled) {
+    border-color: color-mix(in srgb, var(--accent) 55%, var(--line));
+    color: var(--ink);
+  }
+  .icon-btn {
+    @apply inline-flex h-9 w-9 items-center justify-center rounded-xl border transition-all duration-200;
+    border-color: var(--line);
+    color: var(--ink-2);
+    background: color-mix(in srgb, var(--panel) 55%, transparent);
+  }
+  .icon-btn:hover:not(:disabled) {
+    border-color: color-mix(in srgb, var(--accent) 55%, var(--line));
+    color: var(--ink);
+    box-shadow: 0 0 0 4px var(--accent-veil);
+  }
+
+  /* ---- form fields ---- */
+  .field {
+    @apply w-full rounded-xl border px-3.5 py-2.5 text-sm outline-none transition-colors;
+    border-color: var(--line);
+    background: var(--panel-2);
+    color: var(--ink);
+  }
+  .field::placeholder {
+    color: var(--ink-3);
+  }
+  .field:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-veil);
+  }
+
+  /* ---- cards ---- */
+  .card {
+    @apply rounded-2xl border;
+    border-color: var(--line);
+    background: var(--panel);
+    box-shadow: 0 1px 0 0 color-mix(in srgb, #fff 4%, transparent), var(--shadow-lg);
+  }
+  .stat-card {
+    @apply relative overflow-hidden rounded-2xl border p-5 transition-all duration-300;
+    border-color: var(--line);
+    background: var(--panel);
+    box-shadow: var(--shadow-lg);
+  }
+  .stat-card:hover {
+    border-color: color-mix(in srgb, var(--accent) 40%, var(--line));
+    transform: translateY(-2px);
+  }
+
+  /* ---- console ---- */
+  .console {
+    @apply relative overflow-hidden rounded-[20px] border;
+    border-color: var(--line);
+    background: color-mix(in srgb, var(--panel) 82%, transparent);
+    backdrop-filter: blur(16px);
+    box-shadow: var(--shadow-lg);
+  }
+  .console-head {
+    @apply flex items-center justify-between gap-3 border-b px-4 py-3;
+    border-color: var(--line-soft);
+    background: color-mix(in srgb, var(--panel) 55%, transparent);
+  }
+
+  /* ---- tokens/atoms ---- */
+  .t-accent {
+    color: var(--accent);
+  }
+  .t-accent-bg {
+    background: var(--accent);
+  }
+  .pill {
+    @apply inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium;
+    border-color: var(--line);
+    background: var(--panel-2);
+    color: var(--ink-2);
+  }
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm transition-all duration-200;
+    border-color: var(--line);
+    background: var(--panel-2);
+    color: var(--ink-2);
+  }
+  .chip:hover {
+    border-color: color-mix(in srgb, var(--accent) 55%, var(--line));
+    color: var(--ink);
+    box-shadow: 0 0 0 4px var(--accent-veil);
+  }
+
+  /* ---- suggestion / quick-action cards ---- */
+  .sugg-card {
+    @apply relative flex cursor-pointer flex-col gap-2.5 rounded-2xl border p-5 text-left transition-all duration-300;
+    border-color: var(--line);
+    background: color-mix(in srgb, var(--panel) 72%, transparent);
+    backdrop-filter: blur(12px);
+  }
+  .sugg-card:hover {
+    border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+    transform: translateY(-3px);
+    box-shadow: 0 18px 44px -20px var(--accent-glow), 0 0 0 1px var(--accent-veil) inset;
+  }
+  .sugg-icon {
+    @apply flex h-10 w-10 items-center justify-center rounded-xl border transition-transform duration-300;
+    border-color: var(--line);
+    background: var(--panel-2);
+    color: var(--accent);
+  }
+  .group:hover .sugg-icon {
+    transform: scale(1.06) rotate(-3deg);
+  }
+
+  /* ---- messages ---- */
+  .msg-bubble {
+    @apply relative max-w-full whitespace-pre-wrap break-words px-4 py-2.5 text-sm leading-relaxed;
+  }
+  .msg-user {
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-strong) 100%);
+    color: #052e1d;
+    border-radius: 18px 3px 18px 18px;
+    box-shadow: 0 10px 28px -12px var(--accent-glow);
+  }
+  .msg-bot {
+    border-radius: 3px 18px 18px 18px;
+    border: 1px solid var(--line-soft);
+    background: var(--panel-2);
+    color: var(--ink);
+    box-shadow: 0 8px 24px -16px rgba(0, 0, 0, 0.5);
+  }
+  .msg-avatar {
+    @apply flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-sm font-bold;
+    background: linear-gradient(135deg, var(--accent) 0%, #065f46 100%);
+    color: #eafff5;
+    box-shadow: 0 0 0 2px var(--accent-veil), 0 10px 24px -10px var(--accent-glow);
+  }
+  .msg-time {
+    @apply mt-1 flex items-center gap-1.5 text-[10px] font-medium;
+    color: var(--ink-3);
+  }
+  .msg-check {
+    color: var(--accent);
+    @apply text-[9px] font-bold tracking-tight;
+  }
+  .msg-act {
+    @apply inline-flex items-center gap-1 rounded-lg px-1.5 py-1 text-xs font-medium transition-colors;
+    color: var(--ink-3);
+  }
+  .msg-act:hover {
+    color: var(--accent);
+    background: var(--accent-veil);
+  }
+
+  /* ---- source citations & related pills ---- */
+  .src-card {
+    @apply inline-flex max-w-full items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium transition-all duration-200;
+    border-color: var(--line);
+    background: var(--panel);
+    color: var(--ink-2);
+  }
+  .src-card:hover {
+    border-color: color-mix(in srgb, var(--accent) 55%, var(--line));
+    color: var(--ink);
+    box-shadow: 0 0 0 4px var(--accent-veil);
+  }
+  .rel-pill {
+    @apply inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all duration-200;
+    border-color: var(--line);
+    background: var(--panel-2);
+    color: var(--ink-2);
+  }
+  .rel-pill:hover {
+    border-color: color-mix(in srgb, var(--accent) 55%, var(--line));
+    color: var(--ink);
+  }
+
+  /* ---- typing / streaming ---- */
+  .typing-dot {
+    @apply h-2 w-2 rounded-full;
+    background: var(--accent-soft);
+    animation: bounceDot 1.2s infinite ease-in-out;
+  }
+  .stream-cursor {
+    @apply mb-0.5 ml-0.5 inline-block h-3.5 w-[2px] animate-pulse rounded-full align-baseline;
+    background: var(--accent);
+  }
+  .skeleton {
+    border-radius: 8px;
+    background: linear-gradient(
+      100deg,
+      var(--panel-2) 40%,
+      color-mix(in srgb, var(--panel-3) 70%, var(--panel-2)) 50%,
+      var(--panel-2) 60%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite linear;
+  }
+
+  /* ---- toggle ---- */
+  .switch {
+    @apply relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border transition-colors;
+    border-color: var(--line);
+    background: var(--panel-3);
+  }
+  .switch[data-on="true"] {
+    background: var(--accent);
+    border-color: transparent;
+  }
+  .switch-knob {
+    @apply inline-block h-4 w-4 transform rounded-full transition-transform;
+    background: var(--panel);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  }
+  .switch[data-on="true"] .switch-knob {
+    transform: translateX(20px);
+    background: #fff;
+  }
+
+  /* ---- table ---- */
+  .tbl {
+    @apply w-full border-collapse text-left text-sm;
+  }
+  .tbl th {
+    @apply border-b px-4 py-3 text-xs font-semibold uppercase tracking-wider;
+    border-color: var(--line);
+    color: var(--ink-3);
+  }
+  .tbl td {
+    @apply border-b px-4 py-3;
+    border-color: var(--line-soft);
+    color: var(--ink-2);
+  }
+  .tbl tbody tr {
+    transition: background-color 0.15s ease;
+  }
+  .tbl tbody tr:hover {
+    background: var(--accent-veil);
+  }
+
+  /* ---- progress ---- */
+  .progress {
+    @apply h-2 w-full overflow-hidden rounded-full;
+    background: var(--panel-3);
+  }
+  .progress-bar {
+    @apply h-full rounded-full transition-[width] duration-300;
+    background: linear-gradient(90deg, var(--accent-strong), var(--accent-soft));
+  }
+
+  /* ---- badge ---- */
+  .badge {
+    @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold;
+  }
+  .badge-green {
+    background: color-mix(in srgb, var(--accent) 15%, transparent);
+    color: var(--accent-soft);
+  }
+  .badge-amber {
+    background: color-mix(in srgb, var(--warn) 15%, transparent);
+    color: var(--warn);
+  }
+  .badge-red {
+    background: color-mix(in srgb, var(--danger) 15%, transparent);
+    color: var(--danger);
+  }
+  .badge-gray {
+    background: var(--panel-3);
+    color: var(--ink-2);
+  }
+
+  /* ---- sidebar (admin) ---- */
+  .side-link {
+    @apply flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-all duration-200;
+    color: var(--ink-2);
+  }
+  .side-link:hover {
+    color: var(--ink);
+    background: var(--panel-2);
+  }
+  .side-link[aria-current="true"] {
+    background: var(--accent-veil);
+    color: var(--accent-soft);
+  }
+
+  /* ---- stat value ---- */
+  .stat-num {
+    @apply text-3xl font-bold tracking-tight;
+    color: var(--ink);
+  }
+  .stat-delta-up {
+    color: var(--accent-soft);
+  }
+  .stat-delta-down {
+    color: var(--danger);
+  }
+}
+
+/* ---------- markdown rendering (kept API-stable) ---------- */
+.md {
+  @apply space-y-2 text-sm leading-relaxed;
+  color: var(--ink);
+}
+.md-p {
+  @apply whitespace-pre-wrap;
+}
+.md-h {
+  @apply mt-3 font-semibold;
+  color: var(--ink);
+}
+.md-h1 {
+  @apply text-lg;
+}
+.md-h2 {
+  @apply text-base;
+}
+.md-h3,
+.md-h4,
+.md-h5,
+.md-h6 {
+  @apply text-sm;
+}
+.md ul {
+  @apply list-disc space-y-1 pl-5;
+}
+.md ol {
+  @apply list-decimal space-y-1 pl-5;
+}
+.md-link {
+  @apply break-words underline underline-offset-2 transition-colors;
+  color: var(--accent-soft);
+  text-decoration-color: color-mix(in srgb, var(--accent) 45%, transparent);
+}
+.md-link:hover {
+  color: var(--accent);
+}
+.md-code-inline {
+  @apply rounded px-1.5 py-0.5 font-mono text-[12px];
+  background: var(--panel-3);
+  color: var(--accent-soft);
+}
+.md-pre {
+  @apply overflow-x-auto rounded-xl border p-3.5 font-mono text-[12.5px] leading-relaxed;
+  border-color: var(--line);
+  background: #0b0c10;
+  color: #e4e4e7;
+}
+:root[data-theme="light"] .md-pre {
+  background: #101014;
+}
+.md-quote {
+  @apply border-l-2 pl-3;
+  border-color: var(--accent);
+  color: var(--ink-2);
+}
+.md-hr {
+  @apply my-3;
+  border-color: var(--line);
+}
+.md-table-wrap {
+  @apply overflow-x-auto rounded-xl border;
+  border-color: var(--line);
+}
+.md-table {
+  @apply w-full border-collapse text-left text-sm;
+  color: var(--ink);
+}
+.md-table th,
+.md-table td {
+  @apply border-b px-3 py-2 align-top;
+  border-color: var(--line-soft);
+}
+.md-table th {
+  background: var(--panel-2);
+  color: var(--ink-2);
+  font-weight: 600;
+}
+.md-table tr:last-child td {
+  @apply border-b-0;
+}
+.md-img {
+  @apply my-2 max-w-full rounded-xl;
+}
+
+/* ---------- keyframes ---------- */
+@keyframes msgIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes bounceDot {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.5;
+  }
+  30% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+}
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+@keyframes auroraA {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.55;
+  }
+  50% {
+    transform: translate(60px, -40px) scale(1.15);
+    opacity: 0.8;
+  }
+}
+@keyframes auroraB {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1.1);
+    opacity: 0.45;
+  }
+  50% {
+    transform: translate(-80px, 30px) scale(0.95);
+    opacity: 0.7;
+  }
+}
+.anim-show {
+  animation: msgIn 0.3s cubic-bezier(0.21, 1.02, 0.73, 1) both;
+}
+
+/* ---------- decorative backgrounds ---------- */
+.aurora {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+.aurora-blob {
+  position: absolute;
+  width: 560px;
+  height: 560px;
+  border-radius: 9999px;
+  filter: blur(90px);
+  will-change: transform;
+}
+.hera-grid {
+  background-image: radial-gradient(color-mix(in srgb, var(--ink) 7%, transparent) 1px, transparent 1px);
+  background-size: 28px 28px;
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black 30%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black 30%, transparent 75%);
+}
+
+/* ---------- reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
