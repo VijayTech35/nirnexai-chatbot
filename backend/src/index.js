@@ -23,6 +23,15 @@ const corsOpts =
 app.use(cors(corsOpts));
 app.use(express.json({ limit: "1mb" }));
 
+// Security headers (lightweight helmet-equivalent).
+app.use((_req, res, next) => {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "DENY");
+  res.setHeader("Referrer-Policy", "same-origin");
+  if (config.mock) res.setHeader("X-Server-Env", "mock");
+  next();
+});
+
 // ---------- simple request log (2 entries for the admin surface) ----------
 app.use((req, _res, next) => {
   console.log(`${new Date().toISOString()} ${req.method} ${req.url}`);
@@ -40,8 +49,9 @@ app.use("/api/admin", adminRouter);
 // 404 + error handler
 app.use((_req, res) => res.status(404).json({ error: "not found" }));
 app.use((err, _req, res, _next) => {
-  console.error("[server] error:", err.message);
-  res.status(500).json({ error: err.message });
+  // Log the full detail server-side, but never leak internals to the client.
+  console.error("[server] error:", err.message, err.stack || "");
+  res.status(err.status || 500).json({ error: "Internal server error" });
 });
 
 // ---------- boot ----------

@@ -2,57 +2,24 @@
 
 import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
-import { IconMic, IconPaperclip, IconSend, IconSpinner, IconStop } from "../lib/icons";
+import { IconMic, IconSend, IconSpinner, IconStop } from "../lib/icons";
 import { useSettings } from "../lib/settings";
 import { useToast } from "../lib/toast";
-import { getApiBase } from "../lib/chat-client";
-import { readAdminToken } from "../lib/admin-hook";
 
 const MAX_CHARS = 512;
 const ease = [0.21, 1.02, 0.73, 1];
-const ACCEPT = ".txt,.md,.markdown,.csv,.json,.xml,.html,.htm,.log,.pdf";
 
 export default function ChatInput({ inputRef, input, setInput, onSend, busy, onStop }) {
   const { settings } = useSettings();
   const { push } = useToast();
-  const fileRef = useRef(null);
-  const [uploading, setUploading] = useState(false);
+  const inputRef_ = inputRef;
 
   useEffect(() => {
-    const el = inputRef.current;
+    const el = inputRef_.current;
     if (!el) return;
     el.style.height = "auto";
     el.style.height = Math.min(el.scrollHeight, 140) + "px";
-  }, [input, inputRef]);
-
-  const handleFile = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    e.target.value = ""; // allow re-selecting the same file
-    setUploading(true);
-    try {
-      const buf = await file.arrayBuffer();
-      const bytes = new Uint8Array(buf);
-      let bin = "";
-      for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
-      const b64 = btoa(bin);
-
-      const res = await fetch(`${getApiBase()}/api/admin/upload`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "x-admin-token": readAdminToken() },
-        body: JSON.stringify({ filename: file.name, content: b64 })
-      });
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        throw new Error(json.error || `Upload failed (${res.status})`);
-      }
-      push(`Added "${file.name}" to the knowledge base (${json.chunks} chunk${json.chunks === 1 ? "" : "s"})`, "ok");
-    } catch (err) {
-      push(err.message || "Upload failed", "error");
-    } finally {
-      setUploading(false);
-    }
-  };
+  }, [input, inputRef_]);
 
   return (
     <motion.div
@@ -82,27 +49,8 @@ export default function ChatInput({ inputRef, input, setInput, onSend, busy, onS
 
       <div className="floating-input">
         <div className="flex items-end gap-1 rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-2 shadow-[0_18px_50px_-20px_rgba(0,0,0,0.55)] transition-all focus-within:border-[var(--accent)] focus-within:shadow-[0_0_0_4px_var(--accent-veil),0_18px_50px_-20px_rgba(0,0,0,0.55)]">
-          <input
-            ref={fileRef}
-            type="file"
-            accept={ACCEPT}
-            className="hidden"
-            aria-hidden
-            onChange={handleFile}
-          />
-          <button
-            type="button"
-            onClick={() => fileRef.current?.click()}
-            disabled={uploading}
-            className="icon-btn !h-10 !w-10 shrink-0 disabled:opacity-50"
-            aria-label="Attach a file to the knowledge base"
-            title="Add a file to the knowledge base (txt, md, csv, json, html, pdf)"
-          >
-            {uploading ? <IconSpinner className="animate-spin" size={17} /> : <IconPaperclip size={17} />}
-          </button>
-
           <textarea
-            ref={inputRef}
+            ref={inputRef_}
             value={input}
             onChange={(e) => setInput(e.target.value.slice(0, MAX_CHARS))}
             onKeyDown={(e) => {

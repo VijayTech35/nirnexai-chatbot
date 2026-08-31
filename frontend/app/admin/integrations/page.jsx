@@ -1,11 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { readAdminToken, useAdmin } from "../../../lib/admin-hook";
+import { useAdmin } from "../../../lib/admin-hook";
 import { getApiBase } from "../../../lib/chat-client";
 import { useToast } from "../../../lib/toast";
-import { SectionTitle } from "../../../components/ui";
-import { Toggle } from "../../../components/ui";
+import { SectionTitle, Toggle } from "../../../components/ui";
 import { IconLink, IconLock, IconMail, IconPlug, IconWrench } from "../../../lib/icons";
 
 const base = getApiBase();
@@ -29,8 +28,7 @@ function readToggles() {
 }
 
 export default function Integrations() {
-  const token = useState(() => readAdminToken())[0];
-  const { status } = useAdmin(base, token);
+  const { status } = useAdmin(base, "");
   const toast = useToast();
   const [on, setOn] = useState(null);
 

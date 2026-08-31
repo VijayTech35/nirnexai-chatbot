@@ -1,7 +1,9 @@
 import { config } from "../config.js";
 import { stripHtml, chunkText } from "../utils/text.js";
+import { sha1 } from "../utils/hash.js";
 
 const MAX_RETRIES = 2;
+const FETCH_TIMEOUT_MS = 15000;
 
 function pageName(url, siteRoot) {
   let p = url.replace(/\/$/, "");
@@ -13,11 +15,16 @@ function pageName(url, siteRoot) {
 async function fetchWithRetry(url, options, retries = MAX_RETRIES) {
   let lastErr;
   for (let i = 0; i <= retries; i++) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
     try {
-      return await fetch(url, options);
+      const res = await fetch(url, { ...options, signal: controller.signal });
+      return res;
     } catch (e) {
       lastErr = e;
       await new Promise((r) => setTimeout(r, 800 * (i + 1)));
+    } finally {
+      clearTimeout(timer);
     }
   }
   throw lastErr;
@@ -103,13 +110,4 @@ export async function crawl(urls) {
 
 function approxChars(s) {
   return String(s).length;
-}
-
-function sha1(str) {
-  // JS SHA-1 not built-in; lightweight deterministic hash is enough for ids.
-  let h1 = 0xdeadbeef;
-  for (let i = 0; i < str.length; i++) {
-    h1 = ((h1 << 5) - h1 + str.charCodeAt(i)) | 0;
-  }
-  return Math.abs(h1).toString(36);
 }

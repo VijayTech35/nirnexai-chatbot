@@ -124,10 +124,7 @@ class PineconeStore {
     if (!apiKey || !index) throw new Error("Pinecone API key and index are required");
     this.apiKey = apiKey;
     this.index = index;
-    this.base = `https://${index}-${environment ? `${environment}—` : ""}svc.${environment || "us-east1-gcp"}.pinecone.io`.replace(
-      /\u2014/g,
-      "-"
-    );
+    this.base = `https://${index}-${environment ? `${environment}-` : ""}svc.${environment || "us-east1-gcp"}.pinecone.io`;
     this.namespace = "nirnexai";
   }
 

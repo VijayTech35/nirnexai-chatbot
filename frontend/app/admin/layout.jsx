@@ -127,7 +127,6 @@ function Sidebar({ pathname, open, onClose }) {
 function LoginPanel({ onAuthed }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [remember, setRemember] = useState(false);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState(null);
 
@@ -138,9 +137,6 @@ function LoginPanel({ onAuthed }) {
     setErr(null);
     try {
       await adminLogin(base, { username: username.trim(), password });
-      if (remember) {
-        // keep a session longer by trusting the server cookie (no manual token)
-      }
       onAuthed();
     } catch (e) {
       setErr(e.message || "Sign-in failed — check your credentials.");

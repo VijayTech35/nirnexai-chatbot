@@ -6,27 +6,47 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const bool = (v, d = false) => (v == null ? d : String(v).toLowerCase() === "true");
 
+// Parse an integer env var with a safe fallback and a finite check. A bad
+// value (NaN) fails fast rather than silently breaking downstream code.
+const int = (v, d, { min = -Infinity, max = Infinity } = {}) => {
+  const n = parseInt(v, 10);
+  if (Number.isNaN(n) || n < min || n > max) {
+    throw new Error(`Invalid numeric config: expected ${v} to be an integer in [${min}, ${max}]`);
+  }
+  return Math.max(min, Math.min(max, n));
+};
+
+const float = (v, d, { min = -Infinity, max = Infinity } = {}) => {
+  const n = parseFloat(v);
+  if (Number.isNaN(n) || n < min || n > max) {
+    throw new Error(`Invalid numeric config: expected ${v} to be numeric within [${min}, ${max}]`);
+  }
+  return Math.max(min, Math.min(max, n));
+};
+
+export const isProd = process.env.NODE_ENV === "production";
+
 export const config = {
-  port: parseInt(process.env.PORT || "4000", 10),
+  port: int(process.env.PORT || "4000", 4000, { min: 1, max: 65535 }),
 
   openrouterApiKey: process.env.OPENROUTER_API_KEY || "",
   llmModel: process.env.LLM_MODEL || "openai/gpt-4.1",
-  llmTemperature: parseFloat(process.env.LLM_TEMPERATURE || "0.3"),
-  llmMaxTokens: parseInt(process.env.LLM_MAX_TOKENS || "700", 10),
+  llmTemperature: float(process.env.LLM_TEMPERATURE || "0.3", 0.3, { min: 0, max: 2 }),
+  llmMaxTokens: int(process.env.LLM_MAX_TOKENS || "700", 700, { min: 1 }),
   embeddingModel: process.env.EMBEDDING_MODEL || "openai/text-embedding-3-large",
-  embeddingDimensions: parseInt(process.env.EMBEDDING_DIMENSIONS || "1024", 10),
+  embeddingDimensions: int(process.env.EMBEDDING_DIMENSIONS || "1024", 1024, { min: 1 }),
 
-  topK: parseInt(process.env.TOP_K || "5", 10),
-  maxContextChars: parseInt(process.env.MAX_CONTEXT_CHARS || "16000", 10),
+  topK: int(process.env.TOP_K || "5", 5, { min: 1, max: 50 }),
+  maxContextChars: int(process.env.MAX_CONTEXT_CHARS || "16000", 16000, { min: 0 }),
 
   // confidence gate — when the top retrieval score is below this cosine
   // threshold we mark the answer as uncertain and tell the LLM not to guess.
-  minConfidence: parseFloat(process.env.MIN_CONFIDENCE || "0.45"),
+  minConfidence: float(process.env.MIN_CONFIDENCE || "0.45", 0.45, { min: 0, max: 1 }),
   useConfidenceGate: bool(process.env.CONFIDENCE_GATE, !bool(process.env.MOCK, false)),
   // overall budget for one chat turn before the SSE stream is aborted
-  chatTimeoutMs: parseInt(process.env.CHAT_TIMEOUT_MS || "90000", 10),
+  chatTimeoutMs: int(process.env.CHAT_TIMEOUT_MS || "90000", 90000, { min: 1000 }),
   // per-IP chat requests allowed in a 15-minute rolling window
-  chatRateMax: parseInt(process.env.CHAT_RATE_MAX || "30", 10),
+  chatRateMax: int(process.env.CHAT_RATE_MAX || "30", 30, { min: 1 }),
 
   vectorStore: (process.env.VECTOR_STORE || "memory").toLowerCase(),
   pinecone: {
@@ -49,7 +69,7 @@ export const config = {
   useSeedKb: bool(process.env.USE_SEED_KB, true),
   mock: bool(process.env.MOCK, false),
 
-  adminToken: process.env.ADMIN_TOKEN || "change-me-to-a-secret",
+  adminToken: process.env.ADMIN_TOKEN || "",
   adminUser: process.env.ADMIN_USER || "admin",
   adminPass: process.env.ADMIN_PASS || "",
   dataDir: path.resolve(__dirname, "..", process.env.DATA_DIR || "./data"),
@@ -62,5 +82,41 @@ export const config = {
 
   // Express "trust proxy" value. "1" = trust the first X-Forwarded-For hop
   // (the Caddy/nginx reverse proxy). 0 disables (direct exposure).
-  trustProxy: process.env.TRUST_PROXY == null ? 1 : parseInt(process.env.TRUST_PROXY, 10)
+  trustProxy:
+    process.env.TRUST_PROXY == null ? 1 : int(process.env.TRUST_PROXY, 1, { min: 0, max: 10 })
 };
+
+// ---------- startup validation ----------
+// Fail loudly on an insecure or incomplete production configuration instead of
+// silently serving with weak defaults.
+
+function warn(msg) {
+  console.warn(`[config] ${msg}`);
+}
+
+// 1. Never fall back to the literal "change-me-to-a-secret" admin token.
+if (!config.adminToken) {
+  warn("ADMIN_TOKEN is not set; legacy x-admin-token header auth is disabled. Use the username/password sign-in.");
+}
+
+// 2. Admin panel must have a (non-default) password.
+if (config.adminPass === "change-me") {
+  throw new Error("ADMIN_PASS is still the insecure default 'change-me'. Set a real password in backend/.env.");
+}
+if (!config.adminPass) {
+  if (!config.mock) {
+    warn("ADMIN_PASS is not set; the admin panel will reject all sign-ins. Set it in backend/.env.");
+  }
+} else if (!config.mock && config.adminPass.length < 6) {
+  warn("ADMIN_PASS is very short (<6 chars). Use a longer password in production.");
+}
+
+// 3. In production, require an explicit CORS origin (no wildcard) and an API key.
+if (isProd) {
+  if (config.corsOrigin.length === 1 && config.corsOrigin[0] === "*") {
+    throw new Error("CORS_ORIGIN must be an explicit origin list in production (no '*').");
+  }
+  if (!config.mock && !config.openrouterApiKey) {
+    throw new Error("OPENROUTER_API_KEY is required in production (or set MOCK=true explicitly).");
+  }
+}

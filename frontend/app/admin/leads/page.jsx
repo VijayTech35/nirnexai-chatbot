@@ -2,8 +2,7 @@
 
 export const dynamic = "force-dynamic";
 
-import { useState } from "react";
-import { readAdminToken, useAdmin } from "../../../lib/admin-hook";
+import { useAdmin } from "../../../lib/admin-hook";
 import { getApiBase } from "../../../lib/chat-client";
 import { EmptyState, SectionTitle, Skeleton, StatCard } from "../../../components/ui";
 import { IconBuilding, IconCalendar } from "../../../lib/icons";
@@ -11,8 +10,7 @@ import { IconBuilding, IconCalendar } from "../../../lib/icons";
 const base = getApiBase();
 
 export default function Leads() {
-  const token = useState(() => readAdminToken())[0];
-  const { summary, loading } = useAdmin(base, token);
+  const { summary, loading } = useAdmin(base, "");
   const leads = summary?.leads?.items || [];
   const demos = summary?.demos?.items || [];
 

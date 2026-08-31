@@ -2,8 +2,7 @@
 
 export const dynamic = "force-dynamic";
 
-import { useState } from "react";
-import { readAdminToken, useAdmin } from "../../../lib/admin-hook";
+import { useAdmin } from "../../../lib/admin-hook";
 import { getApiBase } from "../../../lib/chat-client";
 import { EmptyState, SectionTitle, Skeleton, StatCard } from "../../../components/ui";
 import { IconActivity, IconChart, IconMessage, IconThumbsDown, IconThumbsUp } from "../../../lib/icons";
@@ -23,8 +22,7 @@ function Bar({ value, max, tone }) {
 }
 
 export default function Analytics() {
-  const token = useState(() => readAdminToken())[0];
-  const { summary, loading } = useAdmin(base, token);
+  const { summary, loading } = useAdmin(base, "");
   const maxQ = Math.max(1, ...(summary?.topQuestions || []).map((t) => t.count));
   const helpful = summary?.feedback?.helpful || 0;
   const notHelpful = summary?.feedback?.notHelpful || 0;

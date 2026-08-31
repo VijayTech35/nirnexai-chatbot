@@ -13,7 +13,14 @@ const chatLimiter = rateLimit({ windowMs: 15 * 60_000, max: config.chatRateMax }
 const sessionLimiter = rateLimit({
   windowMs: 15 * 60_000,
   max: config.chatRateMax * 2,
-  keyFn: (req) => `sess:${req.body?.sessionId || "default"}`,
+  keyFn: (req) => {
+    const raw = req.body?.sessionId;
+    const sid =
+      typeof raw === "string"
+        ? raw.replace(/[^A-Za-z0-9._-]/g, "").slice(0, 64)
+        : "default";
+    return `sess:${sid}`;
+  },
   name: "session"
 });
 
@@ -26,10 +33,9 @@ function sse(res, event, payload) {
 // ---------- persisted conversation store ----------
 import fs from "fs";
 import path from "path";
-import { fileURLToPath } from "url";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const CONVO_FILE = path.resolve(__dirname, "..", "..", "data", "conversations.json");
+// Conversations live in the configured data dir (dataDir), not a hardcoded path.
+const CONVO_FILE = path.resolve(config.dataDir, "conversations.json");
 const MAX_SESSIONS = 100;
 const MAX_MESSAGES_PER_SESSION = 50;
 
@@ -126,8 +132,17 @@ router.post("/", chatLimiter, sessionLimiter, async (req, res) => {
   const { messages = [], sessionId } = req.body || {};
   const userMsg = [...messages].reverse().find((m) => m.role === "user");
 
+  if (!Array.isArray(messages) || messages.length > 50) {
+    return res.status(400).json({ error: "messages must be an array of at most 50 entries" });
+  }
   if (!userMsg || typeof userMsg.content !== "string") {
     return res.status(400).json({ error: "messages must include a user message" });
+  }
+  if (userMsg.content.length > 4000) {
+    return res.status(400).json({ error: "message content is too long" });
+  }
+  if (typeof sessionId === "string" && sessionId.length > 128) {
+    return res.status(400).json({ error: "sessionId is too long" });
   }
 
   if (!config.mock && !config.openrouterApiKey) {
@@ -136,7 +151,11 @@ router.post("/", chatLimiter, sessionLimiter, async (req, res) => {
     });
   }
 
-  const conversation = getConversation(sessionId);
+  const safeSessionId =
+    typeof sessionId === "string"
+      ? sessionId.replace(/[^A-Za-z0-9._-]/g, "").slice(0, 64)
+      : "";
+  const conversation = getConversation(safeSessionId);
 
   // persist the incoming history (sanitized roles)
   const sanitized = messages

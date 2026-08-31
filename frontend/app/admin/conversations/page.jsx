@@ -3,7 +3,7 @@
 export const dynamic = "force-dynamic";
 
 import { useEffect, useState } from "react";
-import { readAdminToken, useAdmin } from "../../../lib/admin-hook";
+import { useAdmin } from "../../../lib/admin-hook";
 import { getApiBase } from "../../../lib/chat-client";
 import { Badge, EmptyState, SectionTitle, Skeleton, StatCard } from "../../../components/ui";
 import { IconMessage } from "../../../lib/icons";
@@ -11,19 +11,17 @@ import { IconMessage } from "../../../lib/icons";
 const base = getApiBase();
 
 export default function Conversations() {
-  const token = useState(() => readAdminToken())[0];
-  const { summary, loading } = useAdmin(base, token);
+  const { summary, loading } = useAdmin(base, "");
   const items = summary?.conversations?.items || [];
   const [sessions, setSessions] = useState(null);
   const [open, setOpen] = useState(null);
 
   useEffect(() => {
-    if (!token) return;
-    fetch(`${base}/api/admin/conversations`, { headers: { "x-admin-token": token } })
+    fetch(`${base}/api/admin/conversations`, { credentials: "include" })
       .then((r) => (r.ok ? r.json() : { sessions: [] }))
       .then((j) => setSessions(j.sessions || []))
       .catch(() => setSessions([]));
-  }, [token]);
+  }, [base]);
 
   return (
     <div className="space-y-6">

@@ -1,0 +1,24 @@
+# Repo-root .dockerignore — applies to all builds (context = repo root).
+
+# Node
+**/node_modules
+**/*.log
+**/npm-debug.log*
+
+# Secrets
+backend/.env
+deploy/compose.env
+.env
+.env.*
+!.env.example
+!backend/.env.example
+
+# Build / runtime artifacts
+frontend/.next
+dist
+backend/data
+Thumbs.db
+Desktop.ini
+.idea
+.vscode
+.git

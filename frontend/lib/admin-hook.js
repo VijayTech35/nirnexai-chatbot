@@ -1,28 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { adminReindex, adminSession, adminStatus, adminSummary } from "./chat-client";
+import { adminReindex, adminStatus, adminSummary } from "./chat-client";
 
-export const TOKEN_SESSION = "nirnex_admin_token_session";
-export const TOKEN_LOCAL = "nirnex_admin_token";
+// Legacy token storage keys – retained only to purge any stale token left on
+// disk by the pre-cookie-auth builds. Auth is now purely cookie-based.
+const TOKEN_SESSION = "nirnex_admin_token_session";
+const TOKEN_LOCAL = "nirnex_admin_token";
 
-export function readAdminToken() {
-  if (typeof window === "undefined") return "";
-  return (
-    window.sessionStorage.getItem(TOKEN_SESSION) ||
-    window.localStorage.getItem(TOKEN_LOCAL) ||
-    ""
-  );
-}
-
-export function saveAdminToken(token, remember) {
-  try {
-    window.sessionStorage.setItem(TOKEN_SESSION, token.trim());
-    if (remember) window.localStorage.setItem(TOKEN_LOCAL, token.trim());
-    else window.localStorage.removeItem(TOKEN_LOCAL);
-  } catch {}
-}
-
+/** Remove any legacy admin token from storage (safe no-op). */
 export function clearAdminToken() {
   try {
     window.sessionStorage.removeItem(TOKEN_SESSION);
@@ -30,20 +16,21 @@ export function clearAdminToken() {
   } catch {}
 }
 
-export function useAdmin(base, token) {
+export function useAdmin(base, _token) {
   const [status, setStatus] = useState(null);
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
+  const token = "";
 
   const refresh = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
       const [st, sm] = await Promise.all([
-        adminStatus(base, token.trim()),
-        adminSummary(base, token.trim())
+        adminStatus(base, token),
+        adminSummary(base, token)
       ]);
       setStatus(st);
       setSummary(sm);
@@ -59,7 +46,7 @@ export function useAdmin(base, token) {
       setBusy(true);
       setError(null);
       try {
-        const res = await adminReindex(base, token.trim(), { clear, seed: true });
+        const res = await adminReindex(base, token, { clear, seed: true });
         await refresh();
         return res;
       } catch (err) {
@@ -78,7 +65,6 @@ export function useAdmin(base, token) {
     try {
       const r = await fetch(`${base}/api/admin/warmup`, {
         method: "POST",
-        headers: token.trim() ? { "x-admin-token": token.trim() } : {},
         credentials: "include"
       });
       if (!r.ok) throw new Error(`warmup ${r.status}`);
@@ -89,7 +75,7 @@ export function useAdmin(base, token) {
     } finally {
       setBusy(false);
     }
-  }, [base, token]);
+  }, [base]);
 
   useEffect(() => {
     refresh();

@@ -4,7 +4,7 @@ export const dynamic = "force-dynamic";
 
 import { useMemo, useState } from "react";
 import { getApiBase } from "../../lib/chat-client";
-import { readAdminToken, useAdmin } from "../../lib/admin-hook";
+import { useAdmin } from "../../lib/admin-hook";
 import { useToast } from "../../lib/toast";
 import { Badge, SectionTitle, Skeleton, StatCard } from "../../components/ui";
 import { AreaChart, BarChart, ChartLegend, makeSeries } from "../../components/charts";
@@ -21,7 +21,7 @@ import {
 const base = getApiBase();
 
 export default function AdminDashboard() {
-  const { status, summary, loading, error, busy, refresh, reindex, warmup } = useAdmin(base, useStoredToken());
+  const { status, summary, loading, error, busy, refresh, reindex, warmup } = useAdmin(base, "");
   const toast = useToast();
   const [clear, setClear] = useState(false);
 
@@ -239,11 +239,4 @@ function Row({ k, v }) {
       <span className="truncate font-medium text-[var(--ink)]">{v}</span>
     </li>
   );
-}
-
-function useStoredToken() {
-  const [token] = useState(() =>
-    typeof window === "undefined" ? "" : readAdminToken()
-  );
-  return token;
 }

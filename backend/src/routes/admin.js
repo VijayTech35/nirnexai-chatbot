@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { config } from "../config.js";
+import { config, isProd } from "../config.js";
 import { reindex, storeSize, ensureIndexed, indexDocs } from "../services/rag.js";
 import { getStore, resetStore } from "../vector/index.js";
 import { listConversations } from "./chat.js";
@@ -35,14 +35,14 @@ router.post("/login", loginLimiter, (req, res) => {
     return res.status(401).json({ error: "invalid username or password" });
   }
   const token = createSession();
-  res.setHeader("Set-Cookie", `${SESSION_COOKIE}=${token}; HttpOnly; Path=/; SameSite=Lax; Max-Age=${12 * 60 * 60}`);
+  res.setHeader("Set-Cookie", `${SESSION_COOKIE}=${token}; HttpOnly; ${isProd ? "Secure; " : ""}Path=/; SameSite=Strict; Max-Age=${12 * 60 * 60}`);
   res.json({ ok: true, expiresIn: 12 * 60 * 60 });
 });
 
 /** POST /api/admin/logout — clear the session cookie. */
 router.post("/logout", (req, res) => {
   destroySession(cookieValue(req.headers.cookie, SESSION_COOKIE));
-  res.setHeader("Set-Cookie", `${SESSION_COOKIE}=; HttpOnly; Path=/; SameSite=Lax; Max-Age=0`);
+  res.setHeader("Set-Cookie", `${SESSION_COOKIE}=; HttpOnly; ${isProd ? "Secure; " : ""}Path=/; SameSite=Strict; Max-Age=0`);
   res.json({ ok: true });
 });
 

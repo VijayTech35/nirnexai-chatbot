@@ -73,23 +73,34 @@ export function inline(text, key = "i", deep = true) {
   return out;
 }
 
+const SAFE_PROTOCOLS = /^(https?:|mailto:|tel:)/i;
+
+/** Allow only safe URL schemes for links/images rendered from markdown. */
+function safeUrl(href) {
+  const h = String(href || "").trim();
+  return SAFE_PROTOCOLS.test(h) ? h : null;
+}
+
 function AutoLink({ raw, k }) {
   const m = raw.match(/^!?\[([^\]]*)\]\(([^)\n]+)\)$/);
   if (!m) return raw;
   const isImg = raw.startsWith("!");
   const href = m[2].trim();
+  const safe = safeUrl(href);
   if (isImg) {
-    return <img key={k} src={href} alt={m[1]} className="md-img" loading="lazy" />;
+    // Only allow http(s) images; never inline data:/javascript:.
+    if (!safe || !/^https?:\/\//i.test(safe)) return raw;
+    return <img key={k} src={safe} alt={m[1]} className="md-img" loading="lazy" />;
   }
+  if (!safe) return raw;
   return (
-    <a key={k} href={href} target="_blank" rel="noreferrer" className="md-link">
-      {inline(m[1] || href, k)}
+    <a key={k} href={safe} target="_blank" rel="noreferrer" className="md-link">
+      {inline(m[1] || safe, k)}
     </a>
   );
 }
 
 const LIST_RE = /^\s*([-*+]|\d+[.)])\s+(.*)$/;
-const URL_RE = /https?:\/\//;
 
 /** Block-level parse -> React tree. */
 export function Markdown({ text }) {
@@ -231,7 +242,7 @@ function MdTable({ rows }) {
           {body.map((r, ri) => (
             <tr key={ri}>
               {r.map((c, ci) => (
-                <td key={ci}>{URL_RE.test(c) ? inline(c, `td${ri}-${ci}`) : inline(c, `td${ri}-${ci}`)}</td>
+                <td key={ci}>{inline(c, `td${ri}-${ci}`)}</td>
               ))}
             </tr>
           ))}
