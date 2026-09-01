@@ -8,7 +8,10 @@
  */
 
 export function getApiBase() {
-  return (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000").replace(/\/+$/, "");
+  // Default to same-origin: Next rewrites /api/* to the backend, so the
+  // browser talks to one origin (strategy works for dev AND production).
+  // Set NEXT_PUBLIC_API_URL to an absolute URL to call a different backend.
+  return (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/+$/, "");
 }
 
 /**

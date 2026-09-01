@@ -1,0 +1,47 @@
+# Render Blueprint — NirnexAI single-origin deployment.
+#
+# One Web Service runs BOTH the Express backend and the Next.js standalone
+# server via render-server.js. Next rewrites /api/* and /health to an internal
+# loopback port, so the app is a single origin and the SameSite=Strict admin
+# cookie works. Docker is not required; this uses Render's native builder.
+#
+# After the first deploy, set the service secrets:
+#   OPENROUTER_API_KEY, ADMIN_USER, ADMIN_PASS, ADMIN_TOKEN (optional),
+#   FIRECRAWL_API_KEY, PINECONE_API_KEY, PINECONE_INDEX, PINECONE_ENVIRONMENT,
+#   CORS_ORIGIN (optional; not needed for single-origin).
+services:
+  - type: web
+    name: nirnexai-chatbot
+    runtime: node
+    plan: starter
+    region: oregon
+    rootDir: .
+    buildCommand: sh deploy/render-build.sh
+    startCommand: node render-server.js
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: INTERNAL_API_URL
+        value: http://127.0.0.1:4000
+      - key: INTERNAL_API_PORT
+        value: "4000"
+      # These secrets must be created in the Render dashboard (or via
+      # the "Render Blueprint" secrets). Values here are placeholders.
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: ADMIN_USER
+        value: vijay
+      - key: ADMIN_PASS
+        sync: false
+      - key: ADMIN_TOKEN
+        sync: false
+      - key: FIRECRAWL_API_KEY
+        sync: false
+      - key: PINECONE_API_KEY
+        sync: false
+      - key: PINECONE_INDEX
+        value: nirnexai
+      - key: PINECONE_ENVIRONMENT
+        sync: false
