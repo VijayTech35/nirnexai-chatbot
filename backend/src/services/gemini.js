@@ -24,6 +24,7 @@ function googleFetch(path, body, { signal } = {}) {
 export async function streamChat({ messages, onDelta, signal }) {
   const attempts = 3;
   let best = "";
+  let lastError = null;
   for (let attempt = 1; attempt <= attempts; attempt++) {
     if (signal && signal.aborted) throw new Error("aborted");
     let produced = "";
@@ -37,8 +38,11 @@ export async function streamChat({ messages, onDelta, signal }) {
       });
     } catch (e) {
       if (signal && signal.aborted) throw e;
+      lastError = e;
       if (attempt === attempts) break;
-      await sleep(400 * attempt);
+      // Respect the API's suggested retry time when it's a rate-limit (429).
+      const wait = retryHintMs(e) || 1000 * attempt;
+      await sleep(wait);
       continue;
     }
     const trimmed = produced.trim();
@@ -48,12 +52,23 @@ export async function streamChat({ messages, onDelta, signal }) {
     }
     if (produced.length > best.length) best = produced;
     if (attempt < attempts) {
-      await sleep(400 * attempt);
+      await sleep(1000 * attempt);
     }
   }
-  // All attempts thin / failed: flush the best we got so the user still sees
-  // something rather than silence.
+  // Rate-limit / hard failure: surface the error so the caller can tell the
+  // user what actually went wrong instead of returning silence.
+  if (lastError) throw lastError;
+  // All attempts produced thin output: flush the best we got.
   if (best) onDelta(best);
+}
+
+/** Extracts "retry in Ns" from a Gemini 429 error body, if present. */
+function retryHintMs(e) {
+  try {
+    const m = /retry in ([\d.]+)s/i.test(e.message) && String(e.message).match(/retry in ([\d.]+)s/i);
+    if (m) return Math.ceil(parseFloat(m[1]) * 1000);
+  } catch {}
+  return 0;
 }
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));

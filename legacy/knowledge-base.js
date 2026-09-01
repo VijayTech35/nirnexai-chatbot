@@ -125,6 +125,22 @@
     },
 
     {
+      id: "meeting-confidentiality",
+      cat: "Security",
+      q: "Are my meetings and data confidential?",
+      kw: ["confidential", "confidentiality", "private", "privacy", "meeting privacy", "who can see", "shared", "nda", "secret"],
+      a: "The documentation positions NirnexAI as **enterprise-ready** with data controls:\n\n• **Data residency (India)** available on Pro (30 days) and Prime (60 days), custom on Enterprise\n• **Data retention** from 7 to 60 days depending on the plan\n• **Enterprise** includes advanced security and dedicated infrastructure\n\nFor exact confidentiality and data-handling terms, refer to the Privacy Policy at **https://nirnexai.com/privacy-policy** or email **info@nirnexai.com**."
+    },
+
+    {
+      id: "delete-my-data",
+      cat: "Security",
+      q: "Can I delete my data from NirnexAI?",
+      kw: ["delete data", "remove data", "delete account", "erase", "delete history", "remove my data", "gdpr", "right to delete"],
+      a: "The public documentation does not describe an explicit self-serve data-deletion flow.\n\nData retention periods apply across plans (7 to 60 days, custom on Enterprise). For account or data deletion, contact support at **info@nirnexai.com** and they'll assist you."
+    },
+
+    {
       id: "multi-department",
       cat: "Platform",
       q: "Can NirnexAI operate across multiple departments?",
@@ -138,6 +154,78 @@
       q: "Can insights be exported?",
       kw: ["export", "export insights", "download", "pdf", "share insights", "csv export", "report"],
       a: "I couldn't find that information in NirnexAI's knowledge base.\n\nIf you'd like, I can connect you with our support team."
+    },
+
+    {
+      id: "get-started",
+      cat: "Platform",
+      q: "How do I get started with NirnexAI?",
+      kw: ["get started", "start", "begin", "setup", "getting started", "first steps", "start using", "sign up", "how to start"],
+      a: "Getting started is easy:\n\n1. **Sign up free** at **https://app.nirnexai.com** — the Free plan is ₹0 forever\n2. **Connect your data** — business/KPI data and meeting platforms such as Google Meet, Zoom, and Microsoft Teams\n3. **Ask a question** — use Chat AI in plain English (press **⌘K** for the ask box)\n4. **Review outputs** — dashboards, infographics, action items, and decision summaries appear automatically\n\nSelf-serve onboarding is included on the Free plan, and guided onboarding is available on Prime and above."
+    },
+
+    {
+      id: "credits-sessions",
+      cat: "Platform",
+      q: "What are credits and sessions in NirnexAI?",
+      kw: ["credits", "sessions", "what is a credit", "what is a session", "analysis credit", "usage units", "limits"],
+      a: "Credits and sessions are the **usage limits** on NirnexAI plans:\n\n• **Credits** = Data Analysis actions (e.g. running a data query or analysis)\n• **Sessions** = individual chat/usage sessions\n\nPlan allowances (monthly):\n• **Free** – 30 credits, 7 sessions\n• **Starter** – 300 credits, 30 sessions\n• **Pro** – 400 credits, 45 sessions\n• **Prime** – 800 credits, 75 sessions\n• **Enterprise** – custom limits"
+    },
+
+    {
+      id: "run-out-credits",
+      cat: "Platform",
+      q: "What happens when I run out of credits?",
+      kw: ["out of credits", "run out", "no credits", "credits exhausted", "exceed limits", "limit reached"],
+      a: "The public documentation doesn't describe the exact behavior when you run out of credits.\n\nEach plan includes a monthly allowance of credits and sessions — upgrading to a higher plan increases your limits. For details on what happens at the limit, our support team can help: **info@nirnexai.com** or the **https://nirnexai.com/contact** page."
+    },
+
+    {
+      id: "mobile-app",
+      cat: "Platform",
+      q: "Is there a mobile app for NirnexAI?",
+      kw: ["mobile app", "app store", "android", "ios", "iphone", "smartphone", "phone app", "mobile", "desktop app"],
+      a: "The public documentation doesn't mention a dedicated mobile or desktop app.\n\nNirnexAI is accessible from any browser at **https://app.nirnexai.com**. For the latest info on mobile support, contact the sales team."
+    },
+
+    {
+      id: "languages",
+      cat: "Platform",
+      q: "What languages does NirnexAI support?",
+      kw: ["languages", "language", "english", "hindi", "multilingual", "translate", "localization", "localized"],
+      a: "The public documentation does not list the languages supported by the platform.\n\nFor details on language availability, contact our team at **info@nirnexai.com**."
+    },
+
+    {
+      id: "api-access",
+      cat: "Platform",
+      q: "Does NirnexAI have an API for developers?",
+      kw: ["api", "developers", "integration api", "webhooks", "sdk", "developer", "code", "automation"],
+      a: "The public documentation does not describe a developer API or SDK.\n\nFor integration and developer options, the sales team can help — book a call at **https://cal.com/nirnexai** or email **info@nirnexai.com**."
+    },
+
+    {
+      id: "vs-chatgpt",
+      cat: "Platform",
+      q: "How is NirnexAI different from ChatGPT?",
+      kw: ["chatgpt", "vs chatgpt", "chat bot", "generic ai", "difference", "general purpose", "copilot", "other ai"],
+      a: "NirnexAI is **purpose-built for business decision-making**, not a general-purpose chatbot:\n\n• **Answers from YOUR context** – Chat AI answers questions about your **own data and past meetings**, not the open internet\n• **Meeting-first** – automatically captures, transcribes, and summarizes your meetings\n• **Decision-focused** – structures reasoning and tracks action items so decisions actually get executed\n• **Executive dashboards** – connects insights to real-time KPIs and forecasts\n\nIn short: ChatGPT answers the world's questions; NirnexAI answers *your business's* questions and drives decisions to action."
+    },
+
+    {
+      id: "auto-join-meetings",
+      cat: "Platform",
+      q: "Can the AI join my meetings automatically?",
+      kw: ["join meetings", "auto join", "automatic", "attend meetings", "ai in meetings", "bot joins", "calendar"],
+      a: "**Meeting Intelligence** works with your major meeting platforms — **Google Meet, Zoom, and Microsoft Teams** — to automatically capture, transcribe, and summarize meetings.\n\nIntegrations for all three are included on the **Pro** and **Prime** plans. Meeting time is metered per plan (e.g. 45 min/mo on Free, up to 1,200 min/mo on Prime)."
+    },
+
+    {
+      id: "replace-notetaker",
+      cat: "Platform",
+      q: "Does NirnexAI replace manual notetaking?",
+      kw: ["notetaker", "note taking", "notes", "minutes", "summaries", "replace notetaking", "capture notes", "no more notes"],
+      a: "Yes — **Meeting Intelligence** automatically captures, transcribes, and summarizes meetings into clear notes, so your team doesn't have to take manual minutes.\n\nIt extracts:\n• Meeting minutes\n• Key decisions\n• Summary points\n• Action items\n• Key notes & questions\n\nPacked with the **Action Tracker**, follow-ups are captured and tracked automatically too."
     },
 
     /* ---------------- MODULES & FEATURES ---------------- */
@@ -213,6 +301,22 @@
       q: "What meeting platforms does NirnexAI integrate with?",
       kw: ["integrations", "integration", "google meet", "zoom", "teams", "microsoft teams", "meeting apps", "connect apps", "compatible apps", "integrate with", "apps"],
       a: "NirnexAI Meeting Intelligence works with all **major meeting platforms**:\n\n• **Google Meet**\n• **Zoom**\n• **Microsoft Teams**\n\nIntegration support for Google Meet, Zoom, and Teams is included on the **Pro** and **Prime** plans."
+    },
+
+    {
+      id: "alerts-notifications",
+      cat: "Features",
+      q: "Does NirnexAI send alerts and notifications?",
+      kw: ["alerts", "notifications", "risk alerts", "warnings", "real-time alerts", "notify", "reminders", "real time"],
+      a: "Yes — the platform includes **live, real-time alerts** tied to your data and decisions:\n\n• **Risk Alerts** such as *\"Revenue dip detected in APAC region\"*\n• **Action Tracker** alerts like *\"Action item overdue: Q3 budget review\"*\n• **Real-time variance analysis** on Executive Dashboards\n\nThese are part of Predictive Forecasting and the Action Tracker modules."
+    },
+
+    {
+      id: "data-analysis-credit",
+      cat: "Features",
+      q: "What counts as a 'Data Analysis' credit?",
+      kw: ["data analysis", "analysis credit", "what uses credits", "credit usage", "analysis action", "how credits used"],
+      a: "**Credits** on NirnexAI plans are described as **Data Analysis** usage — they power the data-analysis actions you run, such as querying your data or running analyses in Chat AI.\n\nPlan credits (monthly):\n• **Free** – 30 credits\n• **Starter** – 300 credits\n• **Pro** – 400 credits\n• **Prime** – 800 credits\n• **Enterprise** – custom limits"
     },
 
     /* ---------------- USE CASES ---------------- */
@@ -376,6 +480,54 @@
       cta: [{ label: "Start Free Trial", href: "https://app.nirnexai.com" }]
     },
 
+    {
+      id: "upgrade-downgrade",
+      cat: "Pricing",
+      q: "Can I change my plan later?",
+      kw: ["upgrade", "downgrade", "change plan", "switch plan", "change billing", "move plans", "plan change"],
+      a: "The public documentation doesn't describe a specific upgrade/downgrade flow, but plans are structured so you can move up as you grow — all paid plans include **unlimited dashboards** from Starter onwards, and Enterprise offers **custom limits**.\n\nFor help changing plans, contact sales at **https://nirnexai.com/contact**."
+    },
+
+    {
+      id: "cancel-anytime",
+      cat: "Pricing",
+      q: "Can I cancel my subscription anytime?",
+      kw: ["cancel", "cancel subscription", "cancellation", "cancel plan", "stop billing", "unsubscribe"],
+      a: "The public documentation does not describe the cancellation policy.\n\nTo cancel or change your subscription, contact support at **info@nirnexai.com** and they'll guide you through it."
+    },
+
+    {
+      id: "payment-methods",
+      cat: "Pricing",
+      q: "What payment methods does NirnexAI accept?",
+      kw: ["payment", "pay", "payment methods", "credit card", "debit card", "upi", "bank transfer", "invoice", "net banking", "how to pay"],
+      a: "The public documentation does not list accepted payment methods.\n\nPlans are billed monthly or annually in **INR (₹)**. For payment options, contact sales at **info@nirnexai.com**."
+    },
+
+    {
+      id: "credit-card-free",
+      cat: "Pricing",
+      q: "Do I need a credit card for the Free plan?",
+      kw: ["credit card required", "free plan card", "card needed", "payment for free", "no card", "free signup"],
+      a: "The Free plan is **₹0 forever**, so no payment is required to get started.\n\nWhether a card is needed at signup isn't stated in the docs — try it at **https://app.nirnexai.com** and it's free."
+    },
+
+    {
+      id: "team-seats",
+      cat: "Pricing",
+      q: "How many team members can use NirnexAI?",
+      kw: ["seats", "team members", "users", "number of users", "per seat", "team size", "members", "collaborators"],
+      a: "NirnexAI is designed for **enterprise-wide** teams — C-Suite, strategy, finance, ops, and risk can all work together across business units.\n\nSpecific per-seat pricing isn't documented in the public plans (they're credit/session-based). For team and seat details, contact sales."
+    },
+
+    {
+      id: "onboarding-support",
+      cat: "Pricing",
+      q: "Do you help with onboarding setup?",
+      kw: ["onboarding", "setup help", "guided onboarding", "implementation", "training", "help setting up", "support team"],
+      a: "Yes — onboarding support scales with your plan:\n\n• **Free** – self-serve onboarding\n• **Prime** – **guided onboarding** included\n• **Enterprise** – priority support and a dedicated **CSM (Customer Success Manager)**\n\nNeed help sooner? Email **info@nirnexai.com** or book a demo at **https://cal.com/nirnexai**."
+    },
+
     /* ---------------- LEAD GEN / DEMO / CONTACT ---------------- */
 
     {
@@ -455,6 +607,22 @@
       q: "How do I access the platform?",
       kw: ["login", "sign in", "log in", "app", "access", "get access", "use the platform", "open app", "platform access"],
       a: "You can access NirnexAI at **https://app.nirnexai.com**.\n\nDirect module links:\n• **Data Intelligence:** https://app.nirnexai.com/chat\n• **Meeting Intelligence:** https://app.nirnexai.com/mom\n• **Executive Dashboard:** https://app.nirnexai.com/dashboard\n\nStart free at **https://app.nirnexai.com**."
+    },
+
+    {
+      id: "company-partners",
+      cat: "Company",
+      q: "Is NirnexAI available to enterprise organizations?",
+      kw: ["enterprise organizations", "large companies", "big teams", "corporate", "fortune", "enterprise sale", "enterprise cs"],
+      a: "Yes — NirnexAI is designed for **enterprise-wide** use:\n\n• **Enterprise plan** includes custom limits, advanced security, dedicated infrastructure, and a **CSM (Customer Success Manager)**\n• **Use cases** include C-Suite strategy, Board Governance, M&A Due Diligence, Financial Planning, Operations Reviews, and Risk Management\n\nTalk to sales at **https://cal.com/nirnexai** or **info@nirnexai.com**."
+    },
+
+    {
+      id: "setup-time",
+      cat: "Company",
+      q: "How long does NirnexAI take to set up?",
+      kw: ["setup time", "how long", "implementation time", "time to set up", "deploy quickly", "fast setup", "rollout"],
+      a: "The documentation touts **self-serve onboarding** on the Free plan and **guided onboarding** on Prime and above, suggesting you can get started quickly.\n\nExact setup timelines aren't published. For an estimate tailored to your organization, book a demo at **https://cal.com/nirnexai**."
     },
 
     /* ---------------- GREETINGS / SMALL TALK ---------------- */
