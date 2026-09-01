@@ -15,44 +15,45 @@ function googleFetch(path, body, { signal } = {}) {
  * Streams a chat completion from Gemini Models.generateContent (stream=true).
  * Invokes onDelta(text) as content arrives. Resolves when done / rejects.
  *
- * Gemini's free-tier streamGenerateContent intermittently emits only the first
- * token(s) then closes the stream early. To harden against that, we retry a
- * couple of times transparently when the produced text is suspiciously short.
+ * Gemini's free-tier streamGenerateContent intermittently emits only a few
+ * tokens then closes the stream early (or errors mid-stream). To harden
+ * against that, each attempt buffers its output; a thin (<20 chars) attempt is
+ * discarded and retried. Only a healthy attempt is flushed to the caller in
+ * one go (answers are short, so buffering stream latency is negligible).
  */
 export async function streamChat({ messages, onDelta, signal }) {
   const attempts = 3;
-  let sentPrefix = 0; // chars already flushed across attempts (avoid duplicates)
+  let best = "";
   for (let attempt = 1; attempt <= attempts; attempt++) {
-    const aborting = signal && signal.aborted;
-    if (aborting) throw new Error("aborted");
+    if (signal && signal.aborted) throw new Error("aborted");
     let produced = "";
-    let ok = true;
     try {
       await streamOnce({
         messages,
         onDelta: (t) => {
           produced += t;
-          // Only forward text that goes past what we've already flushed.
-          if (produced.length > sentPrefix) {
-            const fresh = produced.slice(sentPrefix);
-            sentPrefix = produced.length;
-            onDelta(fresh);
-          }
         },
         signal
       });
     } catch (e) {
       if (signal && signal.aborted) throw e;
-      ok = false;
-      if (attempt === attempts) throw e;
+      if (attempt === attempts) break;
       await sleep(400 * attempt);
       continue;
     }
-    if (ok && produced.trim().length >= 20) return;
-    if (ok && attempt < attempts) {
+    const trimmed = produced.trim();
+    if (trimmed.length >= 20) {
+      if (produced) onDelta(produced);
+      return;
+    }
+    if (produced.length > best.length) best = produced;
+    if (attempt < attempts) {
       await sleep(400 * attempt);
     }
   }
+  // All attempts thin / failed: flush the best we got so the user still sees
+  // something rather than silence.
+  if (best) onDelta(best);
 }
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
