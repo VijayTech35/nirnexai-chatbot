@@ -8,9 +8,31 @@ import { seedDocs } from "../knowledge/site.js";
 
 const BATCH = 16;
 
-function embedTexts(texts) {
-  if (config.mock) return texts.map((t) => hashEmbed(t, config.embeddingDimensions));
-  return embed(texts);
+// Once a paid embedding call fails (e.g. OpenRouter 402 - no credits), fall
+// back to deterministic hash embeddings so the KB still loads and retrieval
+// still works at zero cost. The flag is sticky so that query time uses the
+// SAME embedding method as the indexed documents (consistency matters for
+// cosine similarity).
+let fallbackMode = false;
+
+function embeddingMode() {
+  if (config.mock || fallbackMode) return "hash";
+  return "api";
+}
+
+async function embedTexts(texts) {
+  if (embeddingMode() === "hash") {
+    return texts.map((t) => hashEmbed(t, config.embeddingDimensions));
+  }
+  try {
+    return await embed(texts);
+  } catch (e) {
+    // The paid provider failed (no credits / 402 / network). Drop to the free
+    // hash fallback permanently for this process so retrieval stays consistent.
+    console.warn(`[embed] paid embeddings failed (${e.message}); using free hash embeddings.`);
+    fallbackMode = true;
+    return texts.map((t) => hashEmbed(t, config.embeddingDimensions));
+  }
 }
 
 async function embedBatch(texts) {
