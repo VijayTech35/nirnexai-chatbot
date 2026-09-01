@@ -7,6 +7,7 @@ import analyticsRouter from "./routes/analytics.js";
 import adminRouter from "./routes/admin.js";
 import { ensureIndexed, storeSize } from "./services/rag.js";
 import { loadKb } from "./knowledge/site.js";
+import { activeModel, activeEmbeddingModel } from "./services/llm.js";
 
 // Ensure the KB is registered in this process.
 loadKb();
@@ -59,8 +60,8 @@ fs.mkdirSync(config.dataDir, { recursive: true });
 
 const server = app.listen(config.port, () => {
   console.log(`\n[server] NirnexAI backend listening on http://localhost:${config.port}`);
-  console.log(`[server] mock: ${config.mock} | provider: ${config.provider} | LLM: ${config.provider === "groq" ? config.groqModel : config.llmModel}`);
-  console.log(`[server] embeddings: ${config.provider === "groq" ? config.groqEmbeddingModel : config.embeddingModel} | vector store: ${config.vectorStore}`);
+  console.log(`[server] mock: ${config.mock} | provider: ${config.provider} | LLM: ${activeModel}`);
+  console.log(`[server] embeddings: ${activeEmbeddingModel} | vector store: ${config.vectorStore}`);
   if (!config.mock && !config.hasLlm) {
     console.warn("[server] WARNING: no LLM provider key. Chat will 503 until you add GROQ_API_KEY or OPENROUTER_API_KEY (or set MOCK=true).");
   }

@@ -3,6 +3,7 @@ import crypto from "crypto";
 import { config, isProd } from "../config.js";
 import { reindex, storeSize, ensureIndexed, indexDocs } from "../services/rag.js";
 import { getStore, resetStore } from "../vector/index.js";
+import { activeModel, activeEmbeddingModel } from "../services/llm.js";
 import { listConversations } from "./chat.js";
 import { extractTextFromFile, isSupported } from "../services/upload.js";
 import { chunkText } from "../utils/text.js";
@@ -177,8 +178,8 @@ router.get("/status", auth, async (req, res) => {
     store: config.vectorStore,
     storeSize: await storeSize().catch(() => -1),
     provider: config.provider,
-    llm: config.provider === "groq" ? config.groqModel : config.llmModel,
-    embeddings: config.provider === "groq" ? config.groqEmbeddingModel : config.embeddingModel,
+    llm: activeModel,
+    embeddings: activeEmbeddingModel,
     mock: config.mock,
     firecrawl: !!config.firecrawlApiKey,
     autoIndex: config.autoIndex
