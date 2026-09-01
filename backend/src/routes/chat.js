@@ -4,7 +4,9 @@ import { retrieve } from "../services/rag.js";
 import { buildMessages, mockAnswer } from "../services/prompts.js";
 import { streamChat } from "../services/llm.js";
 import { rateLimit } from "../utils/rate-limit.js";
-import { keywordRetrieve, pageUrl } from "../knowledge/site.js";
+import { keywordRetrieve, pageUrl, loadKb } from "../knowledge/site.js";
+import { detectSentiment, getSuggestions } from "../utils/sentiment.js";
+import { fireWebhook } from "../utils/webhook.js";
 
 const router = Router();
 
@@ -218,13 +220,58 @@ router.post("/", chatLimiter, sessionLimiter, async (req, res) => {
     const topScore = hits[0]?.score ?? 0;
     const uncertain = config.useConfidenceGate && topScore < config.minConfidence;
 
+    // Analyze the user's intent/sentiment for proactive UX + webhooks.
+    const sentiment = detectSentiment(query);
+
+    // Context-aware follow-up suggestions based on the best-matched KB category.
+    const matchedCategory = hits[0]?.doc?.meta?.source;
+    const suggestions = getSuggestions(matchedCategory, query, loadKb());
+
+    // Fire webhook for high-intent events (buying intent or frustration).
+    if (config.webhookUrl) {
+      if (sentiment.intent === "buying" || sentiment.sentiment === "negative") {
+        const sk = typeof sessionId === "string" ? sessionId : "";
+        fireWebhook({
+          event: sentiment.intent === "buying" ? "buying_intent" : "frustrated_user",
+          query,
+          sentiment: sentiment.sentiment,
+          intent: sentiment.intent,
+          sessionId: sk,
+          page: req.headers?.referer || "",
+          ip: req.ip || ""
+        });
+      }
+    }
+
     sse(res, "meta", {
       query,
       sources: hits.map((h) => ({ title: h.doc.meta.title, url: h.doc.meta.url })),
       sessionId: conversation.id,
       confidence: Math.round(topScore * 10000) / 10000,
-      uncertain
+      uncertain,
+      sentiment: sentiment.sentiment,
+      intent: sentiment.intent,
+      greeting: sentiment.greeting,
+      suggestions
     });
+
+    // For pure greetings, short-circuit with a friendly reply + lead-capture
+    // suggestions instead of a full retrieval+LLM answer.
+    if (sentiment.greeting) {
+      const greet = `Hello! Welcome to NirnexAI.\n\nI'm here to help you learn about the platform, products, features, pricing, and integrations — and get you set up with the right plan.\n\nWould you mind sharing your **first name** so I can personalise things for you? I can also just dive straight in if you prefer.`;
+      const greetChunks = [greet];
+      for (const c of greetChunks) {
+        if (clientAborted || res.destroyed) return;
+        sse(res, "delta", { text: c });
+      }
+      conversation.messages.push({ role: "assistant", content: greet.slice(0, 4000) });
+      conversation.updatedAt = Date.now();
+      persistConversations(conversations);
+      sse(res, "suggestions", { suggestions });
+      sse(res, "citations", { citations: [], latencyMs: 0 });
+      sse(res, "done", { ok: true });
+      return res.end();
+    }
 
     const citations = hits
       .filter((h) => h.doc.meta.url)
@@ -265,6 +312,7 @@ router.post("/", chatLimiter, sessionLimiter, async (req, res) => {
     }
 
     sse(res, "citations", { citations, latencyMs: Date.now() - startedAt });
+    sse(res, "suggestions", { suggestions, sentiment: sentiment.sentiment, intent: sentiment.intent });
     sse(res, "done", { ok: true });
     res.end();
   } catch (err) {

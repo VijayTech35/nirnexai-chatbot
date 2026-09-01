@@ -51,6 +51,7 @@ export async function streamChat({
   onDelta = () => {},
   onMeta = () => {},
   onCitations = () => {},
+  onSuggestions = () => {},
   signal
 }) {
   let reader;
@@ -77,6 +78,7 @@ export async function streamChat({
     let buffer = "";
     let text = "";
     let citations = [];
+    let suggestions = [];
     let meta = null;
 
     const pump = async () => {
@@ -99,16 +101,20 @@ export async function streamChat({
           } else if (ev.event === "citations") {
             citations = (typeof ev.data === "string" ? JSON.parse(ev.data) : ev.data)?.citations || [];
             onCitations(citations);
+          } else if (ev.event === "suggestions") {
+            const s = (typeof ev.data === "string" ? JSON.parse(ev.data) : ev.data)?.suggestions || [];
+            suggestions = s;
+            onSuggestions(s);
           } else if (ev.event === "error") {
             throw new Error(
               (typeof ev.data === "string" ? JSON.parse(ev.data) : ev.data)?.message || "Backend error"
             );
           } else if (ev.event === "done") {
-            return { text, citations, meta };
+            return { text, citations, suggestions, meta };
           }
         }
       }
-      return { text, citations, meta };
+      return { text, citations, suggestions, meta };
     };
     return await pump();
   } finally {

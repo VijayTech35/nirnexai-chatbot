@@ -1,5 +1,8 @@
 import { Router } from "express";
 import crypto from "crypto";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 import { config, isProd } from "../config.js";
 import { reindex, storeSize, ensureIndexed, indexDocs } from "../services/rag.js";
 import { getStore, resetStore } from "../vector/index.js";
@@ -8,6 +11,7 @@ import { listConversations } from "./chat.js";
 import { extractTextFromFile, isSupported } from "../services/upload.js";
 import { chunkText } from "../utils/text.js";
 import { sha1 } from "../utils/hash.js";
+import { loadKb, invalidateKb, seedDocs } from "../knowledge/site.js";
 import { rateLimit } from "../utils/rate-limit.js";
 import {
   cookieValue,
@@ -170,6 +174,105 @@ router.delete("/docs/:id", auth, async (req, res) => {
   store.persist();
 
   res.json({ ok: true, removed: matching.length, total: store.docs.length });
+});
+
+const KB_FILE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../legacy/knowledge-base.js");
+
+/** Best-effort slug for a KB entry id from its question. */
+function slugify(text) {
+  return String(text || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60) || `entry-${Date.now()}`;
+}
+
+/**
+ * Insert entries into the KB file right before the closing `];` of the array,
+ * leaving every existing line byte-identical (comments, formatting, order).
+ * Only entries whose id isn't already present are appended. Returns the ids
+ * actually written.
+ */
+function appendKbEntries(upserted) {
+  const src = fs.readFileSync(KB_FILE, "utf8");
+  const start = src.indexOf("var KB = [");
+  if (start === -1) throw new Error("knowledge-base.js is missing the KB array");
+  const close = src.lastIndexOf("];");
+  if (close === -1 || close < start) throw new Error("knowledge-base.js KB array is malformed");
+
+  const existing = new Set(loadKb().map((e) => e.id));
+  const fresh = upserted.filter((e) => !existing.has(e.id));
+  if (!fresh.length) return [];
+
+  // The last entry in the array usually has no trailing comma (valid JS, wrong
+  // for appending), so ensure a comma sits before the new block.
+  const head = src.slice(0, close).trimEnd();
+  const sep = head.endsWith(",") ? "" : ",";
+  const block = fresh.map((e) => `\n\n    ${JSON.stringify(e, null, 2).replace(/\n/g, "\n    ")}`).join(",");
+  const out = `${head}${sep}${block}\n  ${src.slice(close).trimStart()}`;
+  fs.writeFileSync(KB_FILE, out, "utf8");
+  invalidateKb();
+  return fresh.map((e) => e.id);
+}
+
+/** GET /api/admin/kb — list curated KB entries. */
+router.get("/kb", auth, (req, res) => {
+  res.json({
+    entries: loadKb().map((e) => ({ id: e.id, cat: e.cat, q: e.q, a: e.a, kw: e.kw || [] })),
+    total: loadKb().length
+  });
+});
+
+/**
+ * POST /api/admin/kb — upsert curated KB entries then embed the new/changed
+ * ones so chat retrieval sees them immediately.
+ * Body: { entries: [{ cat, q, a, kw?, cta? }] }
+ */
+router.post("/kb", auth, uploadLimiter, async (req, res) => {
+  const { entries } = req.body || {};
+  if (!Array.isArray(entries) || !entries.length) {
+    return res.status(400).json({ error: "entries must be a non-empty array of { cat, q, a }" });
+  }
+
+  const cleaned = [];
+  for (const raw of entries) {
+    const cat = String(raw.cat || "Other").trim();
+    const q = String(raw.q || "").trim();
+    const a = String(raw.a || "").trim();
+    if (!q || !a) {
+      return res.status(400).json({ error: "each entry needs a non-empty q and a" });
+    }
+    const id = String(raw.id || "").trim() || slugify(q);
+    const kw = Array.isArray(raw.kw)
+      ? raw.kw.map((k) => String(k).trim()).filter(Boolean)
+      : [q.toLowerCase()];
+    cleaned.push({ id, cat, q, a, kw, ...(raw.cta ? { cta: String(raw.cta).trim() } : {}) });
+  }
+
+  let written = [];
+  try {
+    written = appendKbEntries(cleaned);
+  } catch (e) {
+    return res.status(500).json({ error: `Could not update knowledge-base.js: ${e.message}` });
+  }
+
+  // Embed only the freshly appended docs (store dedups by id).
+  let added = 0;
+  try {
+    const store = getStore();
+    const fresh = seedDocs().filter((d) => !store.has(d.id));
+    added = await indexDocs(fresh);
+  } catch (e) {
+    console.warn("[admin] KB re-embed failed:", e.message);
+  }
+
+  res.json({
+    ok: true,
+    added: written.length,
+    alreadyExists: cleaned.length - written.length,
+    total: loadKb().length,
+    embedded: added
+  });
 });
 
 /** GET /api/admin/status — store size + config sanity. */

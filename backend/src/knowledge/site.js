@@ -18,6 +18,19 @@ export function loadKb() {
 }
 
 /**
+ * Drop the cached KB so the next loadKb() re-reads knowledge-base.js from
+ * disk. Use after admin edits to the KB file (busts both the global cache
+ * and the module-level require cache, since Node caches the required file).
+ */
+export function invalidateKb() {
+  delete globalThis.NIRNEX_KB;
+  try {
+    const resolved = require.resolve("../../../legacy/knowledge-base.js");
+    delete require.cache[resolved];
+  } catch { /* not required yet — nothing to bust */ }
+}
+
+/**
  * Seed documents from the curated KB so the chatbot is informative even
  * before crawling, and every entry contributes to retrieval.
  */

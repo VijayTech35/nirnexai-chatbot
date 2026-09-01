@@ -64,6 +64,9 @@ export const config = {
   // per-IP chat requests allowed in a 15-minute rolling window
   chatRateMax: int(process.env.CHAT_RATE_MAX || "30", 30, { min: 1 }),
 
+  // Optional webhook URL for high-intent events (buying intent, frustrated users).
+  webhookUrl: process.env.WEBHOOK_URL || "",
+
   vectorStore: (process.env.VECTOR_STORE || "memory").toLowerCase(),
   pinecone: {
     apiKey: process.env.PINECONE_API_KEY || "",

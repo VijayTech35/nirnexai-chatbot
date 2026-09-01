@@ -124,6 +124,7 @@ function Chat() {
       abortRef.current = ctrl;
       let tail = "";
       let uncertain = false;
+      let suggestions = [];
 
       addMessage("assistant", "", { streaming: true });
 
@@ -147,6 +148,9 @@ function Chat() {
           },
           onCitations: (cits) => {
             activeCitations.current = cits;
+          },
+          onSuggestions: (s) => {
+            suggestions = s;
           }
         });
         setMessages((m) => {
@@ -156,7 +160,8 @@ function Chat() {
               ...copy[copy.length - 1],
               streaming: false,
               cits: activeCitations.current,
-              uncertain
+              uncertain,
+              suggestions
             };
           }
           return copy;
@@ -333,6 +338,10 @@ function Chat() {
   );
 
   const proposedQuestions = (m) => {
+    // Prefer backend-provided context-aware suggestions when available.
+    if (Array.isArray(m?.suggestions) && m.suggestions.length) {
+      return m.suggestions.slice(0, 3);
+    }
     const asked = new Set(messages.filter((x) => x.role === "user").map((x) => String(x.content).trim().toLowerCase()));
     const pool = [].concat(settings.suggestedQuestions || [], [
       "What are the pricing plans?",
