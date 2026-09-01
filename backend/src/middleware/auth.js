@@ -15,6 +15,6 @@ export function auth(req, res, next) {
   const ok =
     (cookieTok && isValidSession(cookieTok)) ||
     (headerTok && headerTok === config.adminToken);
-  if (config.mock || ok) return next();
+  if (ok) return next();
   return res.status(401).json({ error: "unauthorized: sign in first" });
 }

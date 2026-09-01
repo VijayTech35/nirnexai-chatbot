@@ -157,16 +157,18 @@ router.post("/", chatLimiter, sessionLimiter, async (req, res) => {
       : "";
   const conversation = getConversation(safeSessionId);
 
-  // persist the incoming history (sanitized roles)
+  // Replace the persisted history with the sanitized client-supplied history
+  // (which the frontend re-sends on every turn) rather than appending it.
+  // This makes the backend the source of truth and prevents duplicate entries
+  // that accumulate when the full history is pushed on each request.
   const sanitized = messages
     .map((m) => {
       const role = m.role === "assistant" || m.role === "system" ? "assistant" : "user";
       return { role, content: String(m.content || "").slice(0, 4000) };
     })
     .filter((m) => m.content.trim())
-    .slice(-12);
-  conversation.messages.push(...sanitized);
-  conversation.messages = conversation.messages.slice(-MAX_MESSAGES_PER_SESSION);
+    .slice(-MAX_MESSAGES_PER_SESSION);
+  conversation.messages = sanitized.slice(-(MAX_MESSAGES_PER_SESSION - 1));
   conversation.updatedAt = Date.now();
   persistConversations(conversations);
 
@@ -230,10 +232,12 @@ router.post("/", chatLimiter, sessionLimiter, async (req, res) => {
     const startedAt = Date.now();
 
     // 2) stream the answer
+    let finalAnswer = "";
     if (config.mock) {
       const chunks = mockAnswer(query, hits);
       for (const c of chunks) {
         if (clientAborted || res.destroyed) return;
+        finalAnswer += c;
         sse(res, "delta", { text: c });
         await new Promise((r) => setTimeout(r, 15));
       }
@@ -242,10 +246,22 @@ router.post("/", chatLimiter, sessionLimiter, async (req, res) => {
       await streamChat({
         messages: llmMessages,
         onDelta: (text) => {
-          if (!clientAborted && !res.destroyed) sse(res, "delta", { text });
+          if (!clientAborted && !res.destroyed) {
+            finalAnswer += text;
+            sse(res, "delta", { text });
+          }
         },
         signal: controller.signal
       });
+    }
+
+    // Persist the generated answer so the backend owns the full transcript
+    // (the client streamed it, but only we can guarantee it's recorded).
+    if (finalAnswer.trim() && !clientAborted && !res.destroyed) {
+      conversation.messages.push({ role: "assistant", content: finalAnswer.slice(0, 4000) });
+      conversation.messages = conversation.messages.slice(-MAX_MESSAGES_PER_SESSION);
+      conversation.updatedAt = Date.now();
+      persistConversations(conversations);
     }
 
     sse(res, "citations", { citations, latencyMs: Date.now() - startedAt });

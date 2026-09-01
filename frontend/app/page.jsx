@@ -136,12 +136,12 @@ function Chat() {
           onMeta: (meta) => {
             uncertain = !!meta?.uncertain;
           },
-          onDelta: (text) => {
-            tail = text;
+          onDelta: (_delta, fullText) => {
+            tail = fullText;
             setMessages((m) => {
               const copy = [...m];
               const last = copy[copy.length - 1];
-              if (last && last.streaming) copy[copy.length - 1] = { ...last, content: text };
+              if (last && last.streaming) copy[copy.length - 1] = { ...last, content: fullText };
               return copy;
             });
           },

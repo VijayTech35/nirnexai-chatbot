@@ -113,10 +113,15 @@ if (!config.adminPass) {
 
 // 3. In production, require an explicit CORS origin (no wildcard) and an API key.
 if (isProd) {
+  // Never allow MOCK mode in production: it bypasses admin auth entirely
+  // (auth.js and the admin login both short-circuit on config.mock).
+  if (config.mock) {
+    throw new Error("MOCK=true cannot be used in production — it disables admin authentication.");
+  }
   if (config.corsOrigin.length === 1 && config.corsOrigin[0] === "*") {
     throw new Error("CORS_ORIGIN must be an explicit origin list in production (no '*').");
   }
-  if (!config.mock && !config.openrouterApiKey) {
-    throw new Error("OPENROUTER_API_KEY is required in production (or set MOCK=true explicitly).");
+  if (!config.openrouterApiKey) {
+    throw new Error("OPENROUTER_API_KEY is required in production.");
   }
 }

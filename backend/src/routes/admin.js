@@ -1,4 +1,5 @@
 import { Router } from "express";
+import crypto from "crypto";
 import { config, isProd } from "../config.js";
 import { reindex, storeSize, ensureIndexed, indexDocs } from "../services/rag.js";
 import { getStore, resetStore } from "../vector/index.js";
@@ -28,9 +29,15 @@ const loginLimiter = rateLimit({ windowMs: 15 * 60_000, max: 20 });
  */
 router.post("/login", loginLimiter, (req, res) => {
   const { username, password } = req.body || {};
-  const okUser = config.mock || (username && username === config.adminUser);
-  const okPass = config.mock || (password && config.adminPass && password === config.adminPass);
-  if (!okUser || !okPass) {
+  const okUser = !!username && username === config.adminUser;
+  // Compare SHA-256 digests in constant time to blunt timing side channels on
+  // the password check. (Full per-user salted hashing lands with the DB move.)
+  const passOk = typeof password === "string" && config.adminPass &&
+    crypto.timingSafeEqual(
+      crypto.createHash("sha256").update(password, "utf8").digest(),
+      crypto.createHash("sha256").update(String(config.adminPass), "utf8").digest()
+    );
+  if (!okUser || !passOk) {
     // do NOT reveal which part was wrong
     return res.status(401).json({ error: "invalid username or password" });
   }

@@ -17,3 +17,6 @@ dist/
 
 # Runtime data (vector store, conversations, analytics)
 backend/data/
+
+# Local test data
+backend/data-test/
