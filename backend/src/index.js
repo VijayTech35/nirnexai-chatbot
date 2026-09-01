@@ -59,10 +59,10 @@ fs.mkdirSync(config.dataDir, { recursive: true });
 
 const server = app.listen(config.port, () => {
   console.log(`\n[server] NirnexAI backend listening on http://localhost:${config.port}`);
-  console.log(`[server] mock: ${config.mock} | LLM: ${config.openrouterApiKey ? config.llmModel : "NOT SET"}`);
-  console.log(`[server] embeddings: ${config.embeddingModel} | vector store: ${config.vectorStore}`);
-  if (!config.mock && !config.openrouterApiKey) {
-    console.warn("[server] WARNING: no OPENROUTER_API_KEY. Chat will 503 until you add it (or set MOCK=true).");
+  console.log(`[server] mock: ${config.mock} | provider: ${config.provider} | LLM: ${config.provider === "groq" ? config.groqModel : config.llmModel}`);
+  console.log(`[server] embeddings: ${config.provider === "groq" ? config.groqEmbeddingModel : config.embeddingModel} | vector store: ${config.vectorStore}`);
+  if (!config.mock && !config.hasLlm) {
+    console.warn("[server] WARNING: no LLM provider key. Chat will 503 until you add GROQ_API_KEY or OPENROUTER_API_KEY (or set MOCK=true).");
   }
 });
 

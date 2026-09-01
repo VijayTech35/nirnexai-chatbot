@@ -176,8 +176,9 @@ router.get("/status", auth, async (req, res) => {
   res.json({
     store: config.vectorStore,
     storeSize: await storeSize().catch(() => -1),
-    llm: config.openrouterApiKey ? config.llmModel : null,
-    embeddings: config.embeddingModel,
+    provider: config.provider,
+    llm: config.provider === "groq" ? config.groqModel : config.llmModel,
+    embeddings: config.provider === "groq" ? config.groqEmbeddingModel : config.embeddingModel,
     mock: config.mock,
     firecrawl: !!config.firecrawlApiKey,
     autoIndex: config.autoIndex

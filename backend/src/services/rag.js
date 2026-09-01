@@ -1,6 +1,6 @@
 import { config } from "../config.js";
 import { getStore } from "../vector/index.js";
-import { embed } from "./openrouter.js";
+import { embed } from "./llm.js";
 import { hashEmbed } from "../utils/vectors.js";
 import { sha1 } from "../utils/hash.js";
 import { crawl } from "./crawler.js";

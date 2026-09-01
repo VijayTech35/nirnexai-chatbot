@@ -2,7 +2,7 @@ import { Router } from "express";
 import { config } from "../config.js";
 import { retrieve } from "../services/rag.js";
 import { buildMessages, mockAnswer } from "../services/prompts.js";
-import { streamChat } from "../services/openrouter.js";
+import { streamChat } from "../services/llm.js";
 import { rateLimit } from "../utils/rate-limit.js";
 import { keywordRetrieve, pageUrl } from "../knowledge/site.js";
 
@@ -145,9 +145,9 @@ router.post("/", chatLimiter, sessionLimiter, async (req, res) => {
     return res.status(400).json({ error: "sessionId is too long" });
   }
 
-  if (!config.mock && !config.openrouterApiKey) {
+  if (!config.mock && !config.hasLlm) {
     return res.status(503).json({
-      error: "LLM not configured. Set OPENROUTER_API_KEY in backend/.env (or MOCK=true for offline dev)."
+      error: "LLM not configured. Set GROQ_API_KEY or OPENROUTER_API_KEY in backend/.env (or MOCK=true for offline dev)."
     });
   }
 

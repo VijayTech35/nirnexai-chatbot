@@ -30,11 +30,19 @@ export const config = {
   port: int(process.env.PORT || "4000", 4000, { min: 1, max: 65535 }),
 
   openrouterApiKey: process.env.OPENROUTER_API_KEY || "",
+  groqApiKey: process.env.GROQ_API_KEY || "",
   llmModel: process.env.LLM_MODEL || "openai/gpt-4.1",
+  groqModel: process.env.GROQ_MODEL || "openai/gpt-oss-20b",
   llmTemperature: float(process.env.LLM_TEMPERATURE || "0.3", 0.3, { min: 0, max: 2 }),
   llmMaxTokens: int(process.env.LLM_MAX_TOKENS || "700", 700, { min: 1 }),
   embeddingModel: process.env.EMBEDDING_MODEL || "openai/text-embedding-3-large",
+  groqEmbeddingModel: process.env.GROQ_EMBEDDING_MODEL || "nomic-embed-text-v1.5",
   embeddingDimensions: int(process.env.EMBEDDING_DIMENSIONS || "1024", 1024, { min: 1 }),
+
+  // LLM provider selection: Groq takes precedence when its key is set
+  // (generous free tier, no hard credit exhaustion vs OpenRouter).
+  provider: process.env.GROQ_API_KEY ? "groq" : "openrouter",
+  hasLlm: !!(process.env.GROQ_API_KEY || process.env.OPENROUTER_API_KEY),
 
   topK: int(process.env.TOP_K || "5", 5, { min: 1, max: 50 }),
   maxContextChars: int(process.env.MAX_CONTEXT_CHARS || "16000", 16000, { min: 0 }),
@@ -118,10 +126,10 @@ if (isProd) {
   if (config.mock) {
     throw new Error("MOCK=true cannot be used in production — it disables admin authentication.");
   }
-  if (config.corsOrigin.length === 1 && config.corsOrigin[0] === "*") {
+  if (!config.corsOrigin.length || (config.corsOrigin.length === 1 && config.corsOrigin[0] === "*")) {
     throw new Error("CORS_ORIGIN must be an explicit origin list in production (no '*').");
   }
-  if (!config.openrouterApiKey) {
-    throw new Error("OPENROUTER_API_KEY is required in production.");
+  if (!config.hasLlm) {
+    throw new Error("An LLM provider key is required in production (set GROQ_API_KEY or OPENROUTER_API_KEY).");
   }
 }

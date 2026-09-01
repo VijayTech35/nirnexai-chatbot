@@ -27,6 +27,11 @@ services:
         value: http://127.0.0.1:4000
       - key: INTERNAL_API_PORT
         value: "4000"
+      # Chat generation provider (free tier). Set this; Groq takes precedence.
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GROQ_MODEL
+        value: openai/gpt-oss-20b
       # These secrets must be created in the Render dashboard (or via
       # the "Render Blueprint" secrets). Values here are placeholders.
       - key: OPENROUTER_API_KEY
