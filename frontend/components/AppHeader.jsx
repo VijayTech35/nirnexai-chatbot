@@ -4,7 +4,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import {
   IconBot,
-  IconCog,
   IconGlobe,
   IconMenu,
   IconMessage,
@@ -112,12 +111,6 @@ export default function AppHeader({ health, theme, onToggleTheme, onNewChat, onC
                     icon={theme === "light" ? <IconSun size={16} /> : <IconMoon size={16} />}
                     label={theme === "light" ? "Light theme" : "Dark theme"}
                     onClick={() => { setMenu(false); onToggleTheme(); }}
-                  />
-                  <MenuRow
-                    icon={<IconCog size={16} />}
-                    label="Admin dashboard"
-                    href="/admin"
-                    onClick={() => setMenu(false)}
                   />
                   <div className="my-1 h-px bg-[var(--line-soft)]" />
                   <button
