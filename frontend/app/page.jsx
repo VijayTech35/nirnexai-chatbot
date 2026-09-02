@@ -87,17 +87,6 @@ function Chat() {
     } catch {}
   }, [messages, sessionId]);
 
-  // natural lead prompt — after N user messages, once, when idle
-  useEffect(() => {
-    if (!settings.leadCapture || leadPrompted.current || lead.sent || lead.closed) return;
-    if (busy) return;
-    const userCount = messages.filter((m) => m.role === "user").length;
-    if (userCount >= (settings.leadCaptureAfter || 2)) {
-      leadPrompted.current = true;
-      setLead((L) => ({ ...L, show: true }));
-    }
-  }, [messages, busy, settings.leadCapture, settings.leadCaptureAfter, lead.sent, lead.closed]);
-
   // keyboard shortcut: "/" focuses the input
   useEffect(() => {
     const onKey = (e) => {
@@ -337,37 +326,16 @@ function Chat() {
     [sessionId, push]
   );
 
-  const proposedQuestions = (m) => {
-    // Prefer backend-provided context-aware suggestions when available.
-    if (Array.isArray(m?.suggestions) && m.suggestions.length) {
-      return m.suggestions.slice(0, 3);
-    }
-    const asked = new Set(messages.filter((x) => x.role === "user").map((x) => String(x.content).trim().toLowerCase()));
-    const pool = [].concat(settings.suggestedQuestions || [], [
-      "What are the pricing plans?",
-      "What timezone is support available in?",
-      "Can NirnexAI forecast sales?",
-      "How do I book a demo?",
-      "Is my data encrypted?"
-    ]);
-    const seen = new Set();
-    return pool.filter((q) => {
-      const k = String(q).trim().toLowerCase();
-      if (!k || k.length < 2) return false;
-      if (seen.has(k)) return false;
-      seen.add(k);
-      return !asked.has(k);
-    }).slice(0, 3);
-  };
-
   const closeLead = useCallback(() => {
     setLead((L) => ({ ...L, show: false, closed: true }));
   }, []);
 
   const isStart = messages.length <= 1 && !busy;
   const lastError = [...messages].reverse().find((m) => m.error);
-  const userMsgs = messages.filter((m) => m.role === "user").length;
-  const showLeadCard = (settings.leadCapture && userMsgs >= (settings.leadCaptureAfter || 2)) || lead.show;
+  // Do NOT force lead capture automatically. The lead card (demo/contact form)
+  // only appears when the user opts in via the "Book Demo" quick action or
+  // explicit intent — never automatically after a certain number of messages.
+  const showLeadCard = lead.show && !lead.sent;
 
   return (
     <div className="t-bg flex min-h-dvh flex-col">
@@ -428,7 +396,6 @@ function Chat() {
                 health={health}
                 lastError={lastError}
                 onRetry={regenerate}
-                relatedFor={proposedQuestions}
                 onAsk={send}
                 lead={{
                   show: showLeadCard && !lead.sent,

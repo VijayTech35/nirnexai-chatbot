@@ -7,7 +7,7 @@ export const SETTINGS_KEY = "nirnex_settings";
 export const DEFAULT_SETTINGS = {
   assistantName: "NirnexAI Assistant",
   welcomeMessage:
-    "Hi! I'm **NirnexAI Assistant** — your guide to the platform. Ask me about pricing, features, modules, integrations, security and use cases. I answer from NirnexAI's own knowledge base and always cite my sources.",
+    "Hi! I'm **NirnexAI Assistant** — I can help you with pricing, features, modules, integrations, security, and use cases. What would you like to know?",
   brandName: "NirnexAI",
   logoUrl: "",
   theme: "dark",

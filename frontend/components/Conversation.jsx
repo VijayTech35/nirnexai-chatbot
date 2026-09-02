@@ -37,7 +37,6 @@ export default function Conversation({
   health,
   lastError,
   onRetry,
-  relatedFor,
   onAsk,
   lead,
   onLeadSubmit
@@ -116,7 +115,6 @@ export default function Conversation({
               <Message
                 m={m}
                 i={i}
-                intro={i === 0}
                 last={i === messages.length - 1}
                 showEdit={m.role === "user" && i === messages.length - 2}
                 showRegen={m.role === "assistant" && !m.streaming && i === messages.length - 1}
@@ -124,7 +122,6 @@ export default function Conversation({
                 onCopy={onCopy}
                 onRegenerate={onRegenerate}
                 onEdit={onEdit}
-                related={relatedFor?.(m) || []}
                 onAsk={onAsk}
               />
             </Fragment>
@@ -204,11 +201,12 @@ function DaySeparator({ label }) {
   );
 }
 
-function Message({ m, i, intro, last, showEdit, showRegen, onRate, onCopy, onRegenerate, onEdit, related, onAsk }) {
+function Message({ m, i, last, showEdit, showRegen, onRate, onCopy, onRegenerate, onEdit, onAsk }) {
   const isUser = m.role === "user";
   const streaming = !!m.streaming;
   const content = m.content || (streaming ? "" : "");
   const cits = Array.isArray(m.cits) ? m.cits.filter((c) => c && c.url) : [];
+  const related = Array.isArray(m.suggestions) && m.suggestions.length ? m.suggestions.slice(0, 2) : [];
   const showSources = !isUser && !streaming && cits.length > 0;
   const showRelated = !isUser && !streaming && last && related.length > 0;
 
@@ -256,7 +254,7 @@ function Message({ m, i, intro, last, showEdit, showRegen, onRate, onCopy, onReg
                 </div>
               </div>
             ) : (
-              <div className={`msg-bubble msg-bot anim-show ${intro ? "msg-intro" : ""} ${streaming ? "msg-streaming" : ""}`}>
+              <div className={`msg-bubble msg-bot anim-show ${streaming ? "msg-streaming" : ""}`}>
                 <div className="md">
                   <MarkdownMenuItem text={content} />
                   {streaming && <span className="stream-cursor" aria-hidden />}
@@ -289,12 +287,6 @@ function Message({ m, i, intro, last, showEdit, showRegen, onRate, onCopy, onReg
           <SourceChips cits={cits} />
         )}
 
-        {!isUser && m.uncertain && !streaming && (
-          <p className="mt-1 px-1 text-[11px] text-[var(--ink-3)]">
-            Based on limited sources — I flagged this as uncertain rather than guessing.
-          </p>
-        )}
-
         {!isUser && !streaming && (
           <div className={last ? "msg-actions msg-actions-last" : "msg-actions"}>
             <FeedbackRow
@@ -310,7 +302,6 @@ function Message({ m, i, intro, last, showEdit, showRegen, onRate, onCopy, onReg
 
         {showRelated && (
           <div className="mt-2.5 flex flex-wrap items-center gap-2">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-[var(--ink-3)]">Related</span>
             <AnimatePresence>
               {related.map((q, ri) => (
                 <motion.button
@@ -334,35 +325,53 @@ function Message({ m, i, intro, last, showEdit, showRegen, onRate, onCopy, onReg
 }
 
 function SourceChips({ cits }) {
+  const [open, setOpen] = useState(false);
   const seen = new Set();
   const unique = cits.filter((c) => (seen.has(c.url) ? false : (seen.add(c.url), true)));
   return (
-    <div className="mt-2 flex flex-wrap items-center gap-2">
-      <span className="text-[11px] font-semibold uppercase tracking-wider text-[var(--ink-3)]">Sources</span>
+    <div className="mt-2">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="inline-flex items-center gap-1.5 rounded-full border border-[var(--line-soft)] bg-[var(--panel)]/60 px-2.5 py-1 text-[11px] font-medium text-[var(--ink-3)] transition-colors hover:text-[var(--ink-2)]"
+        aria-expanded={open}
+      >
+        <IconChevronRight size={12} className={`transition-transform ${open ? "rotate-90" : ""}`} />
+        Sources · {unique.length}
+      </button>
       <AnimatePresence>
-        {unique.slice(0, 4).map((c, ci) => {
-          let host = "";
-          try {
-            host = new URL(c.url).hostname.replace(/^www\./, "") || c.url;
-          } catch {
-            host = c.url;
-          }
-          return (
-            <motion.a
-              key={c.url}
-              href={c.url}
-              target="_blank"
-              rel="noreferrer"
-              className="src-card"
-              initial={{ opacity: 0, x: -8 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.04 * ci, duration: 0.2, ease: motionEase }}
-            >
-              <span className="max-w-[160px] truncate">{c.title || host}</span>
-              <span className="text-[10px] text-[var(--ink-3)]">{host}</span>
-            </motion.a>
-          );
-        })}
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2 }}
+            className="flex flex-wrap gap-2 overflow-hidden pt-2"
+          >
+            {unique.slice(0, 4).map((c, ci) => {
+              let host = "";
+              try {
+                host = new URL(c.url).hostname.replace(/^www\./, "") || c.url;
+              } catch {
+                host = c.url;
+              }
+              return (
+                <motion.a
+                  key={c.url}
+                  href={c.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="src-card"
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.04 * ci, duration: 0.2, ease: motionEase }}
+                >
+                  <span className="max-w-[160px] truncate">{c.title || host}</span>
+                </motion.a>
+              );
+            })}
+          </motion.div>
+        )}
       </AnimatePresence>
     </div>
   );

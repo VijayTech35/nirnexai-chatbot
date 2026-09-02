@@ -236,24 +236,6 @@ function WidgetChat() {
     setTimeout(() => inputRef.current?.focus(), 50);
   }, [busy, messages]);
 
-  const proposedQuestions = (m) => {
-    if (Array.isArray(m?.suggestions) && m.suggestions.length) return m.suggestions.slice(0, 3);
-    const asked = new Set(messages.filter((x) => x.role === "user").map((x) => String(x.content).trim().toLowerCase()));
-    const pool = (settings.suggestedQuestions || []).concat([
-      "What are the pricing plans?",
-      "How do I book a demo?",
-      "Is my data encrypted?",
-      "What integrations are available?"
-    ]);
-    const seen = new Set();
-    return pool.filter((q) => {
-      const k = String(q).trim().toLowerCase();
-      if (!k || seen.has(k)) return false;
-      seen.add(k);
-      return !asked.has(k);
-    }).slice(0, 3);
-  };
-
   const shareMsg = useCallback(async (msgIdx) => {
     const msg = messages[msgIdx];
     if (!msg?.content) return;
@@ -321,7 +303,6 @@ function WidgetChat() {
           health={health}
           lastError={lastError}
           onRetry={regenerate}
-          relatedFor={proposedQuestions}
           onAsk={send}
           lead={{ show: false, onClose: () => {} }}
           onShare={shareMsg}

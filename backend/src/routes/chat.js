@@ -223,9 +223,16 @@ router.post("/", chatLimiter, sessionLimiter, async (req, res) => {
     // Analyze the user's intent/sentiment for proactive UX + webhooks.
     const sentiment = detectSentiment(query);
 
-    // Context-aware follow-up suggestions based on the best-matched KB category.
+    // Follow-up suggestions are now OPTIONAL and kept subtle. We only send
+    // them (and drop them to 2 max) when they'd genuinely help: a user who
+    // seems confused, or one showing buying intent. Otherwise we send none,
+    // so the chat never pushes a "next question" after every answer.
     const matchedCategory = hits[0]?.doc?.meta?.source;
-    const suggestions = getSuggestions(matchedCategory, query, loadKb());
+    const allSuggestions = getSuggestions(matchedCategory, query, loadKb());
+    const suggestions =
+      sentiment.sentiment === "confused" || sentiment.intent === "buying"
+        ? allSuggestions.slice(0, 2)
+        : [];
 
     // Fire webhook for high-intent events (buying intent or frustration).
     if (config.webhookUrl) {
@@ -251,14 +258,13 @@ router.post("/", chatLimiter, sessionLimiter, async (req, res) => {
       uncertain,
       sentiment: sentiment.sentiment,
       intent: sentiment.intent,
-      greeting: sentiment.greeting,
-      suggestions
+      greeting: sentiment.greeting
     });
 
-    // For pure greetings, short-circuit with a friendly reply + lead-capture
-    // suggestions instead of a full retrieval+LLM answer.
+    // For pure greetings, short-circuit with a simple welcome instead of a
+    // full retrieval+LLM call, without asking for contact details.
     if (sentiment.greeting) {
-      const greet = `Hello! Welcome to NirnexAI.\n\nI'm here to help you learn about the platform, products, features, pricing, and integrations — and get you set up with the right plan.\n\nWould you mind sharing your **first name** so I can personalise things for you? I can also just dive straight in if you prefer.`;
+      const greet = `Hello! Welcome to NirnexAI.\n\nI'm here to help you learn about the platform, its products, features, pricing, and integrations. What would you like to know?`;
       const greetChunks = [greet];
       for (const c of greetChunks) {
         if (clientAborted || res.destroyed) return;
@@ -267,7 +273,6 @@ router.post("/", chatLimiter, sessionLimiter, async (req, res) => {
       conversation.messages.push({ role: "assistant", content: greet.slice(0, 4000) });
       conversation.updatedAt = Date.now();
       persistConversations(conversations);
-      sse(res, "suggestions", { suggestions });
       sse(res, "citations", { citations: [], latencyMs: 0 });
       sse(res, "done", { ok: true });
       return res.end();
@@ -312,7 +317,9 @@ router.post("/", chatLimiter, sessionLimiter, async (req, res) => {
     }
 
     sse(res, "citations", { citations, latencyMs: Date.now() - startedAt });
-    sse(res, "suggestions", { suggestions, sentiment: sentiment.sentiment, intent: sentiment.intent });
+    if (suggestions.length) {
+      sse(res, "suggestions", { suggestions, sentiment: sentiment.sentiment, intent: sentiment.intent });
+    }
     sse(res, "done", { ok: true });
     res.end();
   } catch (err) {
