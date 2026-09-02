@@ -47,6 +47,7 @@ export function parseSSE(buf) {
 export async function streamChat({
   messages,
   sessionId,
+  instructions = "",
   base = getApiBase(),
   onDelta = () => {},
   onMeta = () => {},
@@ -59,7 +60,7 @@ export async function streamChat({
     const res = await fetch(`${base}/api/chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ messages, sessionId }),
+      body: JSON.stringify({ messages, sessionId, instructions }),
       signal
     });
 

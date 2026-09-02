@@ -33,7 +33,8 @@ export const DEFAULT_SETTINGS = {
   sourceCitations: true,
   showRelated: true,
   streaming: true,
-  showCharacterCount: true
+  showCharacterCount: true,
+  instructions: ""
 };
 
 function readSettings() {

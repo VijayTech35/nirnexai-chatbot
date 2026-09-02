@@ -115,6 +115,49 @@ export default function Appearance() {
       </section>
 
       <section className="card p-5">
+        <h3 className="mb-1 text-sm font-bold tracking-tight text-[var(--ink)]">Assistant instructions</h3>
+        <p className="mb-4 text-xs text-[var(--ink-2)]">
+          Custom instructions shape how the assistant talks and behaves. These are sent to the AI on every reply and override the default voice where they conflict. Works on both the chat page and the embedded widget.
+        </p>
+
+        <div className="mb-3 flex flex-wrap gap-2">
+          {[
+            {
+              label: "Friendly & concise",
+              value: "Keep replies short and upbeat, like a helpful teammate. Use warm, casual language and minimal bullet points."
+            },
+            {
+              label: "Professional",
+              value: "Reply in a polished, professional tone as an enterprise support assistant. Be precise, structured, and slightly formal."
+            },
+            {
+              label: "Sell subtly",
+              value: "Gently steer answers toward NirnexAI's value: highlight the right feature or plan for the user's situation and mention a demo when it fits naturally."
+            }
+          ].map((preset) => (
+            <button
+              key={preset.label}
+              onClick={() => update({ instructions: preset.value })}
+              className="rounded-full border px-3 py-1.5 text-xs font-medium text-[var(--ink-2)] transition-colors"
+              style={{ borderColor: "var(--line)", background: "var(--panel)" }}
+            >
+              {preset.label}
+            </button>
+          ))}
+        </div>
+
+        <textarea
+          value={settings.instructions || ""}
+          onChange={(e) => update({ instructions: e.target.value })}
+          rows={6}
+          placeholder="e.g. Always answer in 2-3 short sentences. Never mention pricing unless asked. End with a question back to the visitor only when it's genuinely useful."
+          className="w-full resize-y rounded-2xl border bg-transparent p-4 text-sm leading-relaxed text-[var(--ink)] outline-none transition-colors focus:border-[var(--accent)]"
+          style={{ borderColor: "var(--line)" }}
+        />
+        <p className="mt-2 text-right text-xs text-[var(--ink-3)]">{String(settings.instructions || "").length} / 2000 chars</p>
+      </section>
+
+      <section className="card p-5">
         <h3 className="mb-4 text-sm font-bold tracking-tight text-[var(--ink)]">Live preview</h3>
         <div className="rounded-2xl p-5" style={{ background: "var(--bg)", border: "1px solid var(--line)" }}>
           <div className="flex flex-wrap items-center gap-3">

@@ -109,7 +109,7 @@ function WidgetChat() {
   }, []);
 
   const streamTurn = useCallback(
-    async ({ q, sid, history }) => {
+    async ({ q, sid, history, instructions }) => {
       setBusy(true);
       activeCitations.current = [];
       beacon(base, { type: "user", q, sessionId: sid });
@@ -123,6 +123,7 @@ function WidgetChat() {
         await streamChat({
           messages: history,
           sessionId: sid,
+          instructions,
           base,
           signal: ctrl.signal,
           onMeta: (meta) => { uncertain = !!meta?.uncertain; },
@@ -184,9 +185,9 @@ function WidgetChat() {
         .map((m) => ({ role: m.role, content: String(m.content || "") }))
         .slice(-12);
       addMessage("user", q);
-      await streamTurn({ q, sid: sessionId, history });
+      await streamTurn({ q, sid: sessionId, history, instructions: settings.instructions });
     },
-    [busy, input, messages, sessionId, streamTurn, addMessage]
+    [busy, input, messages, sessionId, streamTurn, addMessage, settings.instructions]
   );
 
   const stop = useCallback(() => abortRef.current?.abort(), []);
@@ -224,8 +225,8 @@ function WidgetChat() {
     const sid = newSessionId();
     setSessionId(sid);
     setMessages([messages[0], { ...lastUser, ts: fmtTs(), date: todayStr() }]);
-    await streamTurn({ q: lastUser.content, sid, history: [{ role: "user", content: lastUser.content }] });
-  }, [busy, messages, streamTurn]);
+    await streamTurn({ q: lastUser.content, sid, history: [{ role: "user", content: lastUser.content }], instructions: settings.instructions });
+  }, [busy, messages, streamTurn, settings.instructions]);
 
   const startEdit = useCallback(() => {
     if (busy) return;

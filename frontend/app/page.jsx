@@ -104,7 +104,7 @@ function Chat() {
   }, []);
 
   const streamTurn = useCallback(
-    async ({ q, sid, history, onFinal }) => {
+    async ({ q, sid, history, instructions, onFinal }) => {
       setBusy(true);
       activeCitations.current = [];
       beacon(base, { type: "user", q, sessionId: sid });
@@ -121,6 +121,7 @@ function Chat() {
         await streamChat({
           messages: history,
           sessionId: sid,
+          instructions,
           base,
           signal: ctrl.signal,
           onMeta: (meta) => {
@@ -192,9 +193,9 @@ function Chat() {
         .map((m) => ({ role: m.role, content: String(m.content || "") }))
         .slice(-12);
       addMessage("user", q);
-      await streamTurn({ q, sid: sessionId, history });
+      await streamTurn({ q, sid: sessionId, history, instructions: settings.instructions });
     },
-    [busy, input, messages, push, sessionId, streamTurn]
+    [busy, input, messages, push, sessionId, streamTurn, settings.instructions]
   );
 
   const stop = useCallback(() => abortRef.current?.abort(), []);
@@ -221,8 +222,8 @@ function Chat() {
     setSessionId(sid);
     setMessages([messages[0], { ...lastUser, ts: fmtTs(), date: todayStr() }]);
     leadPrompted.current = true;
-    await streamTurn({ q: lastUser.content, sid, history: [{ role: "user", content: lastUser.content }] });
-  }, [busy, messages, streamTurn]);
+    await streamTurn({ q: lastUser.content, sid, history: [{ role: "user", content: lastUser.content }], instructions: settings.instructions });
+  }, [busy, messages, streamTurn, settings.instructions]);
 
   const startEdit = useCallback(() => {
     if (busy) return;

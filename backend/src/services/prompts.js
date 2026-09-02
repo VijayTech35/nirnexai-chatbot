@@ -4,7 +4,7 @@ import { config } from "../config.js";
  * Grounding prompts: the bot must answer only from retrieved context and
  * cite its sources, per the role instructions.
  */
-export function buildSystemMessage(contextChunks, { uncertain = false } = {}) {
+export function buildSystemMessage(contextChunks, { uncertain = false, instructions = "" } = {}) {
   const context = contextChunks
     .map(
       (c, i) =>
@@ -38,6 +38,13 @@ export function buildSystemMessage(contextChunks, { uncertain = false } = {}) {
           "CAUTION: the DOCUMENTS below are only a weak match for the user's question. If they do not clearly answer it, say you couldn't find that in the knowledge base and offer to connect the user with support. Do not guess or improvise."
         ]
       : []),
+    ...(instructions
+      ? [
+          "",
+          "OWNER-ADDED INSTRUCTIONS (these override the voice/behaviour above where they conflict):",
+          instructions
+        ]
+      : []),
     "",
     "DOCUMENTS (retrieved from the official website knowledge base):",
     context.length ? context : "(no documents retrieved — reply that you could not find the information and suggest contacting support.)"
@@ -47,7 +54,34 @@ export function buildSystemMessage(contextChunks, { uncertain = false } = {}) {
 /** Builds the messages array passed to the LLM. */
 export function buildMessages(history, contextChunks, opts = {}) {
   const system = buildSystemMessage(contextChunks, opts);
-  return [{ role: "system", content: system }, ...history.slice(-12)];
+
+  // Keep a bounded, reasonably sized window of history so long conversations
+  // don't push the request over token limits or inflate cost. Always include
+  // the newest messages; drop oldest first if the budget is exceeded.
+  const maxTurns = 12;
+  const maxChars = 6000;
+  const windowed = Array.isArray(history) ? pruneHistory(history, maxTurns, maxChars) : [];
+
+  return [{ role: "system", content: system }, ...windowed];
+}
+
+/**
+ * Trim conversation history to the most recent messages within both a turn
+ * count and a total-character budget, keeping the conversation coherent for
+ * the LLM while bounding request size.
+ */
+export function pruneHistory(history, maxTurns, maxChars) {
+  const recent = history.slice(-maxTurns);
+  let total = 0;
+  const kept = [];
+  for (let i = recent.length - 1; i >= 0; i--) {
+    const m = recent[i];
+    const len = String(m?.content || "").length;
+    if (total + len > maxChars && kept.length) break;
+    total += len;
+    kept.unshift(m);
+  }
+  return kept;
 }
 
 /** Fake streamed answer for MOCK mode (offline testing, no API key). */

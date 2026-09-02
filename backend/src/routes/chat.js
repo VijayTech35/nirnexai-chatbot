@@ -131,7 +131,7 @@ router.get("/history", (req, res) => {
 
 // ---------- POST /api/chat ----------
 router.post("/", chatLimiter, sessionLimiter, async (req, res) => {
-  const { messages = [], sessionId } = req.body || {};
+  const { messages = [], sessionId, instructions } = req.body || {};
   const userMsg = [...messages].reverse().find((m) => m.role === "user");
 
   if (!Array.isArray(messages) || messages.length > 50) {
@@ -146,6 +146,8 @@ router.post("/", chatLimiter, sessionLimiter, async (req, res) => {
   if (typeof sessionId === "string" && sessionId.length > 128) {
     return res.status(400).json({ error: "sessionId is too long" });
   }
+  const safeInstructions =
+    typeof instructions === "string" ? instructions.slice(0, 2000).trim() : "";
 
   if (!config.mock && !config.hasLlm) {
     return res.status(503).json({
@@ -294,7 +296,7 @@ router.post("/", chatLimiter, sessionLimiter, async (req, res) => {
         await new Promise((r) => setTimeout(r, 15));
       }
     } else {
-      const llmMessages = buildMessages(sanitized, hits, { uncertain });
+      const llmMessages = buildMessages(sanitized, hits, { uncertain, instructions: safeInstructions });
       await streamChat({
         messages: llmMessages,
         onDelta: (text) => {
