@@ -130,6 +130,26 @@
   .btn-primary:active:not(:disabled) {
     transform: translateY(0);
   }
+  /* animated sheen sweeping across primary CTAs */
+  .btn-primary {
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-primary::after {
+    content: "";
+    position: absolute;
+    top: -40%;
+    bottom: -40%;
+    left: -160%;
+    width: 55%;
+    transform: skewX(-20deg);
+    background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+    transition: left 0.65s ease;
+    pointer-events: none;
+  }
+  .btn-primary:hover::after {
+    left: 180%;
+  }
   .btn-ghost {
     @apply inline-flex items-center justify-center gap-2 rounded-xl border px-5 py-2.5 text-sm font-medium transition-all duration-200;
     border-color: var(--line);
@@ -224,6 +244,46 @@
     box-shadow: 0 0 0 4px var(--accent-veil);
   }
 
+  /* ---- provider chain / trust row ---- */
+  .chain-pill {
+    @apply inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold;
+    border-color: var(--line);
+    background: var(--panel-2);
+    color: var(--ink-2);
+  }
+  .chain-arrow {
+    @apply flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold;
+    color: var(--accent);
+    background: var(--accent-veil);
+  }
+  .live-dot {
+    @apply inline-block h-1.5 w-1.5 shrink-0 rounded-full;
+    background: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-veil);
+    animation: livePulse 2.2s ease-in-out infinite;
+  }
+  .live-dot.offline {
+    background: var(--danger);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 25%, transparent);
+    animation: none;
+  }
+  .live-dot.checking {
+    background: var(--warn);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--warn) 25%, transparent);
+    animation: none;
+  }
+  @keyframes livePulse {
+    0%,
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.55;
+      transform: scale(0.85);
+    }
+  }
+
   /* ---- suggestion / quick-action cards ---- */
   .sugg-card {
     @apply relative flex cursor-pointer flex-col gap-2.5 rounded-2xl border p-5 text-left transition-all duration-300;
@@ -238,12 +298,30 @@
   }
   .sugg-icon {
     @apply flex h-10 w-10 items-center justify-center rounded-xl border transition-transform duration-300;
-    border-color: var(--line);
-    background: var(--panel-2);
+    border-color: color-mix(in srgb, var(--accent) 32%, var(--line));
+    background: linear-gradient(135deg, var(--accent-veil) 0%, color-mix(in srgb, var(--accent) 18%, transparent) 100%);
     color: var(--accent);
   }
   .group:hover .sugg-icon {
-    transform: scale(1.06) rotate(-3deg);
+    transform: scale(1.1) rotate(-4deg);
+  }
+  /* cursor-following spotlight on quick-action cards */
+  .sugg-card::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    opacity: 0;
+    pointer-events: none;
+    background: radial-gradient(
+      340px circle at var(--mx, -240px) var(--my, -240px),
+      color-mix(in srgb, var(--accent) 26%, transparent),
+      transparent 42%
+    );
+    transition: opacity 0.3s ease;
+  }
+  .sugg-card:hover::after {
+    opacity: 1;
   }
 
   /* ---- messages ---- */
@@ -262,6 +340,19 @@
     background: var(--panel-2);
     color: var(--ink);
     box-shadow: 0 8px 24px -16px rgba(0, 0, 0, 0.5);
+  }
+  /* glowing ring while an answer is streaming */
+  .msg-bot.msg-streaming {
+    border-color: color-mix(in srgb, var(--accent) 42%, var(--line));
+    box-shadow: 0 0 0 1px var(--accent-veil), 0 18px 44px -20px var(--accent-glow);
+  }
+  /* first/welcome answer gets a premium gradient edge */
+  .msg-bot.msg-intro {
+    border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--line));
+    background:
+      linear-gradient(135deg, var(--accent-veil) 0%, transparent 40%),
+      var(--panel-2);
+    box-shadow: 0 0 0 1px var(--accent-veil), 0 16px 40px -20px var(--accent-glow);
   }
   .msg-avatar {
     @apply flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-sm font-bold;

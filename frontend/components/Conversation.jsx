@@ -116,6 +116,7 @@ export default function Conversation({
               <Message
                 m={m}
                 i={i}
+                intro={i === 0}
                 last={i === messages.length - 1}
                 showEdit={m.role === "user" && i === messages.length - 2}
                 showRegen={m.role === "assistant" && !m.streaming && i === messages.length - 1}
@@ -203,7 +204,7 @@ function DaySeparator({ label }) {
   );
 }
 
-function Message({ m, i, last, showEdit, showRegen, onRate, onCopy, onRegenerate, onEdit, related, onAsk }) {
+function Message({ m, i, intro, last, showEdit, showRegen, onRate, onCopy, onRegenerate, onEdit, related, onAsk }) {
   const isUser = m.role === "user";
   const streaming = !!m.streaming;
   const content = m.content || (streaming ? "" : "");
@@ -243,7 +244,7 @@ function Message({ m, i, last, showEdit, showRegen, onRate, onCopy, onRegenerate
         ) : (
           <div className="inline-block">
             {streaming && !content ? (
-              <div className="msg-bubble msg-bot anim-show">
+              <div className="msg-bubble msg-bot msg-streaming anim-show">
                 <div className="inline-flex items-center gap-2 py-0.5">
                   <span className="relative flex h-3.5 w-3.5 shrink-0">
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--accent)] opacity-40" />
@@ -255,7 +256,7 @@ function Message({ m, i, last, showEdit, showRegen, onRate, onCopy, onRegenerate
                 </div>
               </div>
             ) : (
-              <div className="msg-bubble msg-bot anim-show">
+              <div className={`msg-bubble msg-bot anim-show ${intro ? "msg-intro" : ""} ${streaming ? "msg-streaming" : ""}`}>
                 <div className="md">
                   <MarkdownMenuItem text={content} />
                   {streaming && <span className="stream-cursor" aria-hidden />}

@@ -390,7 +390,15 @@ function Chat() {
               transition={{ duration: 0.4, ease: [0.21, 1.02, 0.73, 1] }}
               className="flex min-h-0 flex-1 flex-col"
             >
-              <HeroSection onStart={() => inputRef.current?.focus()} onBookDemo={() => openLead(true)} />
+              <HeroSection
+                onStart={() => inputRef.current?.focus()}
+                onBookDemo={() => openLead(true)}
+                onAsk={(t) => {
+                  setInput(t);
+                  setTimeout(() => inputRef.current?.focus(), 30);
+                }}
+                health={health}
+              />
               <QuickActions onAsk={send} onDemo={() => openLead(true)} onLead={() => openLead(false)} />
               <div className="flex-1" />
               <div className="mt-8">

@@ -90,6 +90,11 @@ export default function QuickActions({ onAsk, onDemo, onLead }) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, ease: [0.21, 1.02, 0.73, 1], delay: 0.2 + i * 0.04 }}
             className="sugg-card group min-w-[220px] snap-start lg:min-w-0"
+            onMouseMove={(e) => {
+              const r = e.currentTarget.getBoundingClientRect();
+              e.currentTarget.style.setProperty("--mx", `${e.clientX - r.left}px`);
+              e.currentTarget.style.setProperty("--my", `${e.clientY - r.top}px`);
+            }}
             onClick={() => {
               if (a.kind === "demo") onDemo?.();
               else if (a.kind === "lead") onLead?.();
