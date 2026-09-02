@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   IconCalendar,
   IconMic,
@@ -29,6 +29,88 @@ export default function ChatInput({ inputRef, input, setInput, onSend, busy, onS
   const { settings } = useSettings();
   const inputRef_ = inputRef;
   const [cmdIdx, setCmdIdx] = useState(0);
+  const [listening, setListening] = useState(false);
+  const [voiceNote, setVoiceNote] = useState(null);
+  const recRef = useRef(null);
+  const voiceNoteTimer = useRef(null);
+
+  const flashVoiceNote = useCallback((note) => {
+    setVoiceNote(note);
+    clearTimeout(voiceNoteTimer.current);
+    voiceNoteTimer.current = setTimeout(() => setVoiceNote(null), 2600);
+  }, []);
+
+  const stopListening = useCallback(() => {
+    const rec = recRef.current;
+    if (rec) {
+      try {
+        rec.stop();
+      } catch {}
+      recRef.current = null;
+    }
+    setListening(false);
+  }, []);
+
+  const toggleVoice = useCallback(() => {
+    if (busy) return;
+    if (listening) {
+      stopListening();
+      return;
+    }
+    const SR = typeof window !== "undefined"
+      ? window.SpeechRecognition || window.webkitSpeechRecognition
+      : null;
+    if (!SR) {
+      flashVoiceNote("unsupported");
+      return;
+    }
+    let rec;
+    try {
+      rec = new SR();
+    } catch {
+      flashVoiceNote("error");
+      return;
+    }
+    rec.lang = navigator.language || "en-US";
+    rec.continuous = false;
+    rec.interimResults = true;
+    rec.maxAlternatives = 1;
+    let final = "";
+    rec.onresult = (e) => {
+      let interim = "";
+      const results = e.results;
+      for (let i = e.resultIndex; i < results.length; i++) {
+        const t = results[i][0].transcript;
+        if (results[i].isFinal) final += t + " ";
+        else interim += t;
+      }
+      setInput((prev) => {
+        const base = prev.trim();
+        return ((base ? base + " " : "") + final + interim).trimStart();
+      });
+    };
+    rec.onend = () => {
+      recRef.current = null;
+      setListening(false);
+      setVoiceNote(null);
+    };
+    rec.onerror = (e) => {
+      if (e.error === "not-allowed") flashVoiceNote("grant");
+      else if (e.error !== "aborted") flashVoiceNote("error");
+      setListening(false);
+    };
+    recRef.current = rec;
+    setListening(true);
+    try {
+      rec.start();
+    } catch {
+      recRef.current = null;
+      setListening(false);
+      flashVoiceNote("error");
+    }
+  }, [busy, listening, stopListening, flashVoiceNote, setInput]);
+
+  useEffect(() => () => stopListening(), [stopListening]);
 
   const cmd = input.trim();
   const needle = cmd.startsWith("/") ? cmd.slice(1).toLowerCase() : "";
@@ -154,6 +236,18 @@ export default function ChatInput({ inputRef, input, setInput, onSend, busy, onS
         )}
       </AnimatePresence>
 
+      {voiceNote && (
+        <div className="mb-2 flex justify-center">
+          <span className="rounded-full border border-[var(--line)] bg-[var(--panel)] px-3 py-1 text-[11px] font-medium text-[var(--ink-2)]">
+            {voiceNote === "unsupported"
+              ? "Voice input isn't supported in this browser — try Chrome."
+              : voiceNote === "grant"
+                ? "Microphone blocked — allow access in your browser to use voice."
+                : "Couldn't start voice input — please try again."}
+          </span>
+        </div>
+      )}
+
       <div className="floating-input">
         <div className="flex items-end gap-1 rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-2 shadow-[0_18px_50px_-20px_rgba(0,0,0,0.55)] transition-all focus-within:border-[var(--accent)] focus-within:shadow-[0_0_0_4px_var(--accent-veil),0_18px_50px_-20px_rgba(0,0,0,0.55)]">
           <textarea
@@ -178,13 +272,29 @@ export default function ChatInput({ inputRef, input, setInput, onSend, busy, onS
 
           <button
             type="button"
-            disabled
-            className="icon-btn hidden !h-10 !w-10 shrink-0 cursor-not-allowed opacity-45 sm:inline-flex"
-            aria-label="Voice input (coming soon)"
-            title="Voice input — coming soon"
+            onClick={toggleVoice}
+            disabled={busy}
+            className={`icon-btn relative hidden !h-10 !w-10 shrink-0 sm:inline-flex ${
+              listening ? "mic-live !border-[var(--accent)] !text-[var(--accent)]" : ""
+            } ${busy ? "cursor-not-allowed opacity-45" : ""}`}
+            aria-label={listening ? "Stop voice input" : "Start voice input"}
+            title={listening ? "Stop voice input" : "Voice input"}
           >
             <IconMic size={17} />
+            {listening && (
+              <span className="absolute -top-0.5 -right-0.5 flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--accent)] opacity-60" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-[var(--accent)]" />
+              </span>
+            )}
           </button>
+
+          {listening && (
+            <span className="hidden shrink-0 items-center gap-1.5 pb-2 pr-1 text-[11px] font-semibold text-[var(--accent)] sm:flex">
+              <span className="live-dot" aria-hidden />
+              Listening
+            </span>
+          )}
 
           {busy ? (
             <button
