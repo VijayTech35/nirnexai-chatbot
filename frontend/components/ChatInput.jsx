@@ -1,17 +1,15 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
-import { IconMic, IconSend, IconSpinner, IconStop } from "../lib/icons";
+import { useEffect } from "react";
+import { IconMic, IconSend, IconStop } from "../lib/icons";
 import { useSettings } from "../lib/settings";
-import { useToast } from "../lib/toast";
 
 const MAX_CHARS = 512;
 const ease = [0.21, 1.02, 0.73, 1];
 
-export default function ChatInput({ inputRef, input, setInput, onSend, busy, onStop }) {
+export default function ChatInput({ inputRef, input, setInput, onSend, busy, onStop, showSuggestionChips = true }) {
   const { settings } = useSettings();
-  const { push } = useToast();
   const inputRef_ = inputRef;
 
   useEffect(() => {
@@ -29,7 +27,7 @@ export default function ChatInput({ inputRef, input, setInput, onSend, busy, onS
       transition={{ duration: 0.45, ease }}
       className="mx-auto w-full max-w-3xl px-4 pb-5"
     >
-      {!busy && (
+      {showSuggestionChips && !busy && (
         <div className="mb-2 flex flex-wrap justify-center gap-2">
           {settings.suggestedQuestions.slice(0, 6).map((q, i) => (
             <motion.button
@@ -66,17 +64,17 @@ export default function ChatInput({ inputRef, input, setInput, onSend, busy, onS
           />
 
           {settings.showCharacterCount && input.length > 0 && (
-            <span className="hidden shrink-0 pb-1 text-[10px] font-medium text-[var(--ink-3)] sm:inline">
+            <span className={`hidden shrink-0 pb-1 text-[10px] font-medium sm:inline ${input.length >= MAX_CHARS ? "text-[var(--warn)]" : "text-[var(--ink-3)]"}`}>
               {input.length}/{MAX_CHARS}
             </span>
           )}
 
           <button
             type="button"
-            onClick={() => push("Voice input is coming soon", "info")}
-            className="icon-btn hidden !h-10 !w-10 shrink-0 sm:inline-flex"
-            aria-label="Voice input"
-            title="Voice input"
+            disabled
+            className="icon-btn hidden !h-10 !w-10 shrink-0 cursor-not-allowed opacity-45 sm:inline-flex"
+            aria-label="Voice input (coming soon)"
+            title="Voice input — coming soon"
           >
             <IconMic size={17} />
           </button>
@@ -92,20 +90,28 @@ export default function ChatInput({ inputRef, input, setInput, onSend, busy, onS
               <span className="hidden sm:inline">Stop</span>
             </button>
           ) : (
-            <button
+            <motion.button
               type="submit"
               disabled={!input.trim()}
               onClick={() => onSend()}
+              whileHover={{ scale: input.trim() ? 1.05 : 1 }}
+              whileTap={{ scale: 0.93 }}
               className="btn-primary !rounded-xl !px-3.5 !py-2.5"
               aria-label="Send message"
             >
               <IconSend size={16} />
-            </button>
+            </motion.button>
           )}
         </div>
-        <p className="mt-2.5 text-center text-[11px] text-[var(--ink-3)]">
-          {settings.footerText} · Answers are AI-generated and cite official sources
-        </p>
+        <div className="mt-2.5 flex items-center justify-between gap-3 px-1 text-[11px] text-[var(--ink-3)]">
+          <span className="flex items-center gap-1.5">
+            <kbd className="rounded border border-[var(--line)] bg-[var(--panel-2)] px-1 py-px text-[10px] font-semibold">Enter</kbd>
+            to send · 
+            <kbd className="rounded border border-[var(--line)] bg-[var(--panel-2)] px-1 py-px text-[10px] font-semibold">Shift+Enter</kbd>
+            new line
+          </span>
+          <span className="hidden truncate sm:inline">{settings.footerText} · answers cite official sources</span>
+        </div>
       </div>
     </motion.div>
   );

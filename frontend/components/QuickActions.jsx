@@ -73,29 +73,39 @@ const actions = [
 
 export default function QuickActions({ onAsk, onDemo, onLead }) {
   return (
-    <section className="mx-auto mt-2 grid max-w-4xl grid-cols-1 gap-3.5 px-1 sm:grid-cols-2 lg:grid-cols-4">
-      {actions.map((a, i) => (
-        <motion.button
-          key={a.key}
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, ease: [0.21, 1.02, 0.73, 1], delay: 0.05 + i * 0.04 }}
-          className="sugg-card group"
-          onClick={() => {
-            if (a.kind === "demo") onDemo?.();
-            else if (a.kind === "lead") onLead?.();
-            else onAsk?.(a.q);
-          }}
-        >
-          <div className="flex items-start justify-between gap-2">
-            <span className="sugg-icon">{a.icon}</span>
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-[var(--ink)]">{a.title}</p>
-            <p className="mt-1 text-xs leading-relaxed text-[var(--ink-3)]">{a.desc}</p>
-          </div>
-        </motion.button>
-      ))}
+    <section className="mt-8">
+      <motion.p
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.4, delay: 0.2 }}
+        className="mb-3 text-center text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--ink-3)]"
+      >
+        Explore NirnexAI
+      </motion.p>
+      <div className="mx-auto grid max-w-4xl grid-cols-1 gap-3.5 px-1 sm:grid-cols-2 lg:grid-cols-4">
+        {actions.map((a, i) => (
+          <motion.button
+            key={a.key}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, ease: [0.21, 1.02, 0.73, 1], delay: 0.2 + i * 0.04 }}
+            className="sugg-card group"
+            onClick={() => {
+              if (a.kind === "demo") onDemo?.();
+              else if (a.kind === "lead") onLead?.();
+              else onAsk?.(a.q);
+            }}
+          >
+            <div className="flex items-start justify-between gap-2">
+              <span className="sugg-icon">{a.icon}</span>
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-[var(--ink)]">{a.title}</p>
+              <p className="mt-1 text-xs leading-relaxed text-[var(--ink-3)]">{a.desc}</p>
+            </div>
+          </motion.button>
+        ))}
+      </div>
     </section>
   );
 }

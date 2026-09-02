@@ -269,6 +269,11 @@
     color: #eafff5;
     box-shadow: 0 0 0 2px var(--accent-veil), 0 10px 24px -10px var(--accent-glow);
   }
+  .msg-avatar-user {
+    background: linear-gradient(135deg, var(--panel-3) 0%, var(--panel-2) 100%);
+    color: var(--ink-2);
+    box-shadow: 0 0 0 2px var(--line-soft), 0 10px 24px -14px rgba(0, 0, 0, 0.45);
+  }
   .msg-time {
     @apply mt-1 flex items-center gap-1.5 text-[10px] font-medium;
     color: var(--ink-3);
@@ -284,6 +289,52 @@
   .msg-act:hover {
     color: var(--accent);
     background: var(--accent-veil);
+  }
+
+  /* Message actions fade in on hover (older messages) or stay visible when
+     they're the latest answer. Always visible on touch devices. */
+  .msg-actions {
+    opacity: 1;
+    transition: opacity 0.18s ease, transform 0.18s ease;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .msg-actions {
+      opacity: 0;
+      transform: translateY(-2px);
+    }
+    .msg-actions.msg-actions-last {
+      opacity: 1;
+      transform: none;
+    }
+    .group:hover .msg-actions,
+    .msg-actions:focus-within {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /* Thin animated gradient bar shown while the assistant is generating. */
+  .stream-bar {
+    position: relative;
+    height: 2px;
+    overflow: hidden;
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+  }
+  .stream-bar::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, var(--accent), var(--accent-soft), transparent);
+    background-size: 200% 100%;
+    animation: streamSlide 1.1s linear infinite;
+  }
+  @keyframes streamSlide {
+    from {
+      background-position: 200% 0;
+    }
+    to {
+      background-position: -200% 0;
+    }
   }
 
   /* ---- source citations & related pills ---- */

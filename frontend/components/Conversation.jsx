@@ -16,6 +16,7 @@ import {
   IconShare,
   IconThumbsDown,
   IconThumbsUp,
+  IconUser,
   IconX
 } from "../lib/icons";
 import { useSettings } from "../lib/settings";
@@ -92,6 +93,8 @@ export default function Conversation({
         )}
       </div>
 
+      {streamTurnBusy && <div className="stream-bar" aria-hidden />}
+
       <div
         ref={scrollRef}
         onScroll={onScroll}
@@ -148,9 +151,13 @@ export default function Conversation({
       </div>
 
       {!streamTurnBusy && hasMsgs && (
-        <div className="flex items-center justify-center gap-1.5 border-t border-[var(--line-soft)] py-2 text-[11px] font-medium text-[var(--ink-3)]">
-          <span className="msg-check !text-[var(--accent)]">✓✓</span>
-          You're all caught up
+        <div className="flex items-center justify-center gap-3 border-t border-[var(--line-soft)] py-2 text-[11px] font-medium text-[var(--ink-3)]">
+          <span className="h-px flex-1 bg-gradient-to-r from-transparent to-[var(--line)]" aria-hidden />
+          <span className="flex items-center gap-1.5">
+            <span className="msg-check !text-[var(--accent)]">✓✓</span>
+            You're all caught up
+          </span>
+          <span className="h-px flex-1 bg-gradient-to-l from-transparent to-[var(--line)]" aria-hidden />
         </div>
       )}
     </section>
@@ -209,9 +216,13 @@ function Message({ m, i, last, showEdit, showRegen, onRate, onCopy, onRegenerate
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: motionEase }}
-      className={`mb-4 flex gap-2.5 ${isUser ? "flex-row-reverse" : ""}`}
+      className={`group mb-4 flex gap-2.5 ${isUser ? "flex-row-reverse" : ""}`}
     >
-      {!isUser && (
+      {isUser ? (
+        <span className="msg-avatar msg-avatar-user mt-0.5">
+          <IconUser size={16} />
+        </span>
+      ) : (
         <span className="msg-avatar mt-0.5">
           <IconBot size={18} />
         </span>
@@ -233,11 +244,14 @@ function Message({ m, i, last, showEdit, showRegen, onRate, onCopy, onRegenerate
           <div className="inline-block">
             {streaming && !content ? (
               <div className="msg-bubble msg-bot anim-show">
-                <div className="inline-flex items-center gap-1.5 py-0.5">
-                  {[0, 1, 2].map((d) => (
-                    <span key={d} className="typing-dot" style={{ animationDelay: `${d * 150}ms` }} />
-                  ))}
-                  <span className="ml-1 text-xs font-medium text-[var(--ink-3)]">thinking…</span>
+                <div className="inline-flex items-center gap-2 py-0.5">
+                  <span className="relative flex h-3.5 w-3.5 shrink-0">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--accent)] opacity-40" />
+                    <span className="relative inline-flex h-3.5 w-3.5 rounded-full bg-[var(--accent)]/20" />
+                  </span>
+                  <span className="text-xs font-medium text-[var(--ink-2)]">
+                    Gathering sources &amp; drafting your answer…
+                  </span>
                 </div>
               </div>
             ) : (
@@ -280,15 +294,17 @@ function Message({ m, i, last, showEdit, showRegen, onRate, onCopy, onRegenerate
           </p>
         )}
 
-        {!isUser && !streaming && last && (
-          <FeedbackRow
-            m={m}
-            i={i}
-            showRegen={showRegen}
-            onRate={onRate}
-            onCopy={onCopy}
-            onRegenerate={onRegenerate}
-          />
+        {!isUser && !streaming && (
+          <div className={last ? "msg-actions msg-actions-last" : "msg-actions"}>
+            <FeedbackRow
+              m={m}
+              i={i}
+              showRegen={showRegen}
+              onRate={onRate}
+              onCopy={onCopy}
+              onRegenerate={onRegenerate}
+            />
+          </div>
         )}
 
         {showRelated && (
