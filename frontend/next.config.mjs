@@ -21,6 +21,23 @@ const nextConfig = {
   async headers() {
     return [
       {
+        // Allow /widget (and its JS/CSS/assets) to be embedded via the loader.
+        source: "/widget/:path*",
+        headers: [
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Referrer-Policy", value: "same-origin" },
+          { key: "Cross-Origin-Opener-Policy", value: "same-origin" }
+        ]
+      },
+      {
+        source: "/widget-loader.js",
+        headers: [
+          { key: "Content-Type", value: "text/javascript" },
+          { key: "Cache-Control", value: "public, max-age=3600" },
+          { key: "Access-Control-Allow-Origin", value: "*" }
+        ]
+      },
+      {
         source: "/(.*)",
         headers: [
           { key: "X-Frame-Options", value: "DENY" },
