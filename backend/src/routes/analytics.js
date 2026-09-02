@@ -4,6 +4,7 @@ import path from "path";
 import { config } from "../config.js";
 import { rateLimit } from "../utils/rate-limit.js";
 import { auth } from "../middleware/auth.js";
+import { fireWebhook } from "../utils/webhook.js";
 
 const router = Router();
 const file = path.join(config.dataDir, "analytics.jsonl");
@@ -37,6 +38,24 @@ router.post("/", beaconLimiter, (req, res) => {
   const ev = req.body || {};
   if (!ev || !ev.type) return res.status(400).json({ error: "event.type is required" });
   append({ ...ev, receivedAt: new Date().toISOString() });
+
+  // A submitted lead/demo is the highest-intent event there is — notify the
+  // business via the configured webhook (Slack/Gmail/automation) immediately.
+  if (ev.type === "lead" || ev.type === "demo") {
+    fireWebhook({
+      event: ev.type === "demo" ? "demo_request" : "lead_submitted",
+      firstName: ev.firstName || "",
+      lastName: ev.lastName || "",
+      email: ev.email || "",
+      company: ev.company || "",
+      role: ev.role || "",
+      goal: ev.goal || "",
+      query: ev.query || "",
+      sessionId: ev.sessionId || "",
+      page: ev.page || ""
+    });
+  }
+
   res.status(201).json({ ok: true });
 });
 

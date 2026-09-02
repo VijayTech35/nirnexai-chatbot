@@ -4,7 +4,7 @@ export const dynamic = "force-dynamic";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAdmin } from "../../../lib/admin-hook";
-import { adminDocs, adminDeleteDoc, adminUpload, getApiBase } from "../../../lib/chat-client";
+import { adminDocs, adminDeleteDoc, adminUpload, adminAddKb, adminListKb, getApiBase } from "../../../lib/chat-client";
 import { useToast } from "../../../lib/toast";
 import { Badge, EmptyState, SectionTitle, StatCard } from "../../../components/ui";
 import { IconBook, IconDatabase, IconPaperclip, IconPlus, IconRefresh, IconSearch, IconShield, IconSpinner, IconTrash } from "../../../lib/icons";
@@ -33,6 +33,47 @@ export default function KnowledgeBase() {
   const [uploading, setUploading] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
   const fileRef = useRef(null);
+
+  const [kbEntries, setKbEntries] = useState([]);
+  const [kbLoading, setKbLoading] = useState(false);
+  const [kbForm, setKbForm] = useState({ cat: "Platform", q: "", a: "" });
+  const [savingKb, setSavingKb] = useState(false);
+
+  const loadKbEntries = useCallback(async () => {
+    setKbLoading(true);
+    try {
+      const r = await adminListKb(base, "");
+      setKbEntries(r.entries || []);
+    } catch { setKbEntries([]); }
+    setKbLoading(false);
+  }, []);
+
+  useEffect(() => { loadDocs(); loadKbEntries(); }, [loadDocs, loadKbEntries]);
+
+  const onAddKb = async (e) => {
+    e.preventDefault();
+    if (!kbForm.q.trim() || !kbForm.a.trim()) {
+      toast.push("Question and answer are required.", "error");
+      return;
+    }
+    setSavingKb(true);
+    try {
+      const res = await adminAddKb(base, "", [{
+        cat: kbForm.cat,
+        q: kbForm.q.trim(),
+        a: kbForm.a.trim(),
+        ...(kbForm.kw?.trim() ? { kw: kbForm.kw.trim().split(",").map((k) => k.trim()).filter(Boolean) } : {})
+      }]);
+      toast.push(res.added ? "KB entry added & embedded." : "Entry already exists in the KB.", res.added ? "ok" : "info");
+      setKbForm({ cat: kbForm.cat, q: "", a: "", kw: "" });
+      loadKbEntries();
+      refresh();
+    } catch (err) {
+      toast.push(`Add KB entry failed: ${err.message}`, "error");
+    } finally {
+      setSavingKb(false);
+    }
+  };
 
   const loadDocs = useCallback(async () => {
     setDocsLoading(true);
@@ -120,6 +161,70 @@ export default function KnowledgeBase() {
         <StatCard icon={<IconBook className="h-5 w-5" />} label="Documents" value={status?.storeSize ?? "…"} hint="embedded + persisted" />
         <StatCard icon={<IconDatabase className="h-5 w-5" />} label="Vector store" value={status?.store ?? "…"} hint="store backend" />
         <StatCard icon={<IconShield className="h-5 w-5" />} label="Embedding model" value={status?.embeddings ?? "…"} hint={status?.autoIndex ? "hash-drift refresh on" : "refresh disabled"} />
+      </div>
+
+      {/* Add KB entry */}
+      <div className="card p-5">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-bold tracking-tight text-[var(--ink)]">Add a QA entry</h3>
+            <p className="mt-0.5 text-xs text-[var(--ink-2)]">Appends a curated question/answer to the seed KB and embeds it immediately. Total seed entries: {kbLoading ? "…" : kbEntries.length}</p>
+          </div>
+        </div>
+
+        <form onSubmit={onAddKb} className="mt-4 space-y-3">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <label className="mb-1 block text-xs font-medium text-[var(--ink-2)]">Category</label>
+              <select
+                value={kbForm.cat}
+                onChange={(e) => setKbForm((f) => ({ ...f, cat: e.target.value }))}
+                className="field !py-2"
+              >
+                {["Platform", "Features", "Pricing", "Use Cases", "Company", "Security", "Contact", "Other"].map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-[var(--ink-2)]">Keywords (comma-separated, optional)</label>
+              <input
+                value={kbForm.kw || ""}
+                onChange={(e) => setKbForm((f) => ({ ...f, kw: e.target.value }))}
+                placeholder="pricing, plans, cost"
+                className="field !py-2"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-[var(--ink-2)]">Question</label>
+            <input
+              value={kbForm.q}
+              onChange={(e) => setKbForm((f) => ({ ...f, q: e.target.value }))}
+              placeholder="What can the chatbot answer?"
+              className="field !py-2"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-[var(--ink-2)]">Answer</label>
+            <textarea
+              value={kbForm.a}
+              onChange={(e) => setKbForm((f) => ({ ...f, a: e.target.value }))}
+              placeholder="Write the grounded answer here. Markdown is supported."
+              rows={4}
+              className="field !py-2"
+            />
+          </div>
+          <div className="flex justify-end">
+            <button type="submit" className="btn-primary text-sm" disabled={savingKb}>
+              {savingKb ? (
+                <><IconSpinner className="h-4 w-4 animate-spin" /> Saving…</>
+              ) : (
+                <><IconPlus className="h-4 w-4" /> Add entry</>
+              )}
+            </button>
+          </div>
+        </form>
       </div>
 
       {/* Upload section */}

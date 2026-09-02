@@ -212,6 +212,21 @@ export async function adminDeleteDoc(base, _token, id) {
   return j;
 }
 
+/** POST /api/admin/kb — append curated KB entries (question/answer pairs). */
+export async function adminAddKb(base, _token, entries) {
+  const r = await adminFetch(base, "/api/admin/kb", { method: "POST", body: { entries } });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error || `kb ${r.status}`);
+  return j;
+}
+
+/** GET /api/admin/kb — list curated KB entries. */
+export async function adminListKb(base, _token) {
+  const r = await adminFetch(base, "/api/admin/kb");
+  if (!r.ok) throw new Error(`kb list ${r.status}`);
+  return r.json();
+}
+
 /** POST /api/admin/login — username/password → session cookie. */
 export async function adminLogin(base, { username, password }) {
   const r = await fetch(`${base}/api/admin/login`, {
