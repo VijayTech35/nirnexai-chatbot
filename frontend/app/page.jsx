@@ -388,7 +388,7 @@ function Chat() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.4, ease: [0.21, 1.02, 0.73, 1] }}
-              className="flex min-h-[calc(100dvh-64px)] flex-col"
+              className="flex min-h-0 flex-1 flex-col"
             >
               <HeroSection onStart={() => inputRef.current?.focus()} onBookDemo={() => openLead(true)} />
               <QuickActions onAsk={send} onDemo={() => openLead(true)} onLead={() => openLead(false)} />

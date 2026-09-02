@@ -9,6 +9,13 @@ export const metadata = {
   description: "Official NirnexAI AI assistant — answers about products, pricing, features and use cases."
 };
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#09090b"
+};
+
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",

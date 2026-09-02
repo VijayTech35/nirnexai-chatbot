@@ -25,7 +25,7 @@ export default function ChatInput({ inputRef, input, setInput, onSend, busy, onS
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 12 }}
       transition={{ duration: 0.45, ease }}
-      className="mx-auto w-full max-w-3xl px-4 pb-5"
+      className="mx-auto w-full max-w-3xl px-3 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:px-4"
     >
       {showSuggestionChips && !busy && (
         <div className="mb-2 flex flex-wrap justify-center gap-2">
@@ -104,11 +104,11 @@ export default function ChatInput({ inputRef, input, setInput, onSend, busy, onS
           )}
         </div>
         <div className="mt-2.5 flex items-center justify-between gap-3 px-1 text-[11px] text-[var(--ink-3)]">
-          <span className="flex items-center gap-1.5">
-            <kbd className="rounded border border-[var(--line)] bg-[var(--panel-2)] px-1 py-px text-[10px] font-semibold">Enter</kbd>
-            to send · 
-            <kbd className="rounded border border-[var(--line)] bg-[var(--panel-2)] px-1 py-px text-[10px] font-semibold">Shift+Enter</kbd>
-            new line
+          <span className="flex min-w-0 items-center gap-1.5">
+            <kbd className="shrink-0 rounded border border-[var(--line)] bg-[var(--panel-2)] px-1 py-px text-[10px] font-semibold">Enter</kbd>
+            <span className="hidden sm:inline">to send ·</span>
+            <kbd className="hidden shrink-0 rounded border border-[var(--line)] bg-[var(--panel-2)] px-1 py-px text-[10px] font-semibold md:inline">Shift+Enter</kbd>
+            <span className="hidden md:inline">new line</span>
           </span>
           <span className="hidden truncate sm:inline">{settings.footerText} · answers cite official sources</span>
         </div>

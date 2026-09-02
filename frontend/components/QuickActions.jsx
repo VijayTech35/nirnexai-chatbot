@@ -82,14 +82,14 @@ export default function QuickActions({ onAsk, onDemo, onLead }) {
       >
         Explore NirnexAI
       </motion.p>
-      <div className="mx-auto grid max-w-4xl grid-cols-1 gap-3.5 px-1 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="no-scrollbar touch-scroll mx-auto flex max-w-4xl snap-x snap-mandatory gap-3.5 overflow-x-auto px-1 pb-1 lg:grid lg:grid-cols-4 lg:gap-3.5 lg:overflow-visible lg:px-0 lg:pb-0">
         {actions.map((a, i) => (
           <motion.button
             key={a.key}
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, ease: [0.21, 1.02, 0.73, 1], delay: 0.2 + i * 0.04 }}
-            className="sugg-card group"
+            className="sugg-card group min-w-[220px] snap-start lg:min-w-0"
             onClick={() => {
               if (a.kind === "demo") onDemo?.();
               else if (a.kind === "lead") onLead?.();

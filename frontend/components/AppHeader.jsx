@@ -37,8 +37,8 @@ export default function AppHeader({ health, theme, onToggleTheme, onNewChat, onC
   }, []);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-[var(--line-soft)] glass">
-      <div className="mx-auto flex h-16 w-full max-w-5xl items-center justify-between gap-3 px-4 sm:px-6">
+    <header className="sticky top-0 z-40 border-b border-[var(--line-soft)] glass" style={{ paddingTop: "env(safe-area-inset-top)" }}>
+      <div className="mx-auto flex h-16 w-full max-w-5xl items-center justify-between gap-2 px-4 sm:gap-3 sm:px-6">
         <div className="flex min-w-0 items-center gap-3">
           <div className="relative">
             <div className="msg-avatar h-10 w-10 rounded-2xl text-base">
@@ -66,10 +66,10 @@ export default function AppHeader({ health, theme, onToggleTheme, onNewChat, onC
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
           <button
             onClick={onNewChat}
-            className="btn-ghost shrink-0 !px-3.5 !py-2 text-[13px]"
+            className="btn-ghost shrink-0 !px-3 !py-2 text-[13px] sm:!px-3.5"
             aria-label="Start a new chat"
           >
             <IconPlus size={15} />

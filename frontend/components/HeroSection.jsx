@@ -55,7 +55,7 @@ export default function HeroSection({ onStart, onBookDemo }) {
           initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.55, ease, delay: 0.06 }}
-          className="text-4xl font-extrabold leading-[1.08] tracking-tight text-[var(--ink)] sm:text-5xl md:text-[56px]"
+          className="text-[clamp(2rem,5.6vw,3.5rem)] font-extrabold leading-[1.08] tracking-tight text-[var(--ink)]"
         >
           {settings.heroHeading}
         </motion.h1>

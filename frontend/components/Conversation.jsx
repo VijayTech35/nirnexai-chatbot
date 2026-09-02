@@ -216,15 +216,15 @@ function Message({ m, i, last, showEdit, showRegen, onRate, onCopy, onRegenerate
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: motionEase }}
-      className={`group mb-4 flex gap-2.5 ${isUser ? "flex-row-reverse" : ""}`}
+      className={`group mb-4 flex gap-2 sm:gap-2.5 ${isUser ? "flex-row-reverse" : ""}`}
     >
       {isUser ? (
-        <span className="msg-avatar msg-avatar-user mt-0.5">
-          <IconUser size={16} />
+        <span className="msg-avatar msg-avatar-user !h-8 !w-8 !text-[12px] mt-0.5 sm:!h-9 sm:!w-9">
+          <IconUser size={15} />
         </span>
       ) : (
-        <span className="msg-avatar mt-0.5">
-          <IconBot size={18} />
+        <span className="msg-avatar !h-8 !w-8 mt-0.5 sm:!h-9 sm:!w-9">
+          <IconBot size={16} />
         </span>
       )}
 
