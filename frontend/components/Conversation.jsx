@@ -10,10 +10,7 @@ import {
   IconCheck,
   IconChevronRight,
   IconCopy,
-  IconDownload,
   IconMail,
-  IconRefresh,
-  IconShare,
   IconThumbsDown,
   IconThumbsUp,
   IconUser,
@@ -44,7 +41,6 @@ export default function Conversation({
   const { settings } = useSettings();
   const stickRef = useRef(true);
   const [jump, setJump] = useState(false);
-  const hasMsgs = messages.length > 1;
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -147,17 +143,6 @@ export default function Conversation({
           )}
         </div>
       </div>
-
-      {!streamTurnBusy && hasMsgs && (
-        <div className="flex items-center justify-center gap-3 border-t border-[var(--line-soft)] py-2 text-[11px] font-medium text-[var(--ink-3)]">
-          <span className="h-px flex-1 bg-gradient-to-r from-transparent to-[var(--line)]" aria-hidden />
-          <span className="flex items-center gap-1.5">
-            <span className="msg-check !text-[var(--accent)]">✓✓</span>
-            You're all caught up
-          </span>
-          <span className="h-px flex-1 bg-gradient-to-l from-transparent to-[var(--line)]" aria-hidden />
-        </div>
-      )}
     </section>
   );
 }
@@ -215,7 +200,7 @@ function Message({ m, i, last, showEdit, showRegen, onRate, onCopy, onRegenerate
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: motionEase }}
-      className={`group mb-4 flex gap-2 sm:gap-2.5 ${isUser ? "flex-row-reverse" : ""}`}
+      className={`group mb-3 flex gap-2 sm:gap-2.5 ${isUser ? "flex-row-reverse" : ""}`}
     >
       {isUser ? (
         <span className="msg-avatar msg-avatar-user !h-8 !w-8 !text-[12px] mt-0.5 sm:!h-9 sm:!w-9">
@@ -348,7 +333,7 @@ function SourceChips({ cits }) {
             transition={{ duration: 0.2 }}
             className="flex flex-wrap gap-2 overflow-hidden pt-2"
           >
-            {unique.slice(0, 4).map((c, ci) => {
+            {unique.slice(0, 3).map((c, ci) => {
               let host = "";
               try {
                 host = new URL(c.url).hostname.replace(/^www\./, "") || c.url;
@@ -390,29 +375,28 @@ function FeedbackRow({ m, i, showRegen, onRate, onCopy, onRegenerate }) {
         initial={{ opacity: 0, y: 6 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.08, duration: 0.25 }}
-        className="mt-1.5 flex flex-wrap items-center gap-1 px-0.5 pt-0.5"
+        className="mt-1 flex items-center gap-1 px-0.5"
       >
-        <span className="mr-1 text-[11px] font-medium text-[var(--ink-3)]">Helpful?</span>
         <button
           onClick={() => onRate(i, 1)}
-          className={`msg-act ${m.rated === 1 ? "!text-[var(--accent)]" : ""}`}
+          className={`msg-act p-1 ${m.rated === 1 ? "!text-[var(--accent)]" : ""}`}
           aria-label="Helpful"
+          title="Helpful"
           aria-pressed={m.rated === 1}
         >
           <IconThumbsUp size={14} />
-          {m.rated === 1 ? "Thanks" : "Yes"}
         </button>
         <button
           onClick={() => onRate(i, -1)}
-          className={`msg-act ${m.rated === -1 ? "!text-[var(--warn)]" : ""}`}
+          className={`msg-act p-1 ${m.rated === -1 ? "!text-[var(--warn)]" : ""}`}
           aria-label="Not helpful"
+          title="Not helpful"
           aria-pressed={m.rated === -1}
         >
           <IconThumbsDown size={14} />
-          {m.rated === -1 ? "Noted" : "No"}
         </button>
         <span className="mx-1 h-4 w-px bg-[var(--line)]" />
-        <button onClick={handleCopy} className={`msg-act relative ${copied ? "!text-[var(--accent)]" : ""}`} aria-label="Copy answer">
+        <button onClick={handleCopy} className={`msg-act p-1 ${copied ? "!text-[var(--accent)]" : ""}`} aria-label="Copy answer" title="Copy">
           <AnimatePresence mode="wait" initial={false}>
             {copied ? (
               <motion.span
@@ -421,9 +405,8 @@ function FeedbackRow({ m, i, showRegen, onRate, onCopy, onRegenerate }) {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.6 }}
                 transition={{ duration: 0.12 }}
-                className="inline-flex items-center gap-1"
               >
-                <IconCheck size={14} /> Copied
+                <IconCheck size={14} />
               </motion.span>
             ) : (
               <motion.span
@@ -432,24 +415,12 @@ function FeedbackRow({ m, i, showRegen, onRate, onCopy, onRegenerate }) {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.12 }}
-                className="inline-flex items-center gap-1"
               >
-                <IconCopy size={14} /> Copy
+                <IconCopy size={14} />
               </motion.span>
             )}
           </AnimatePresence>
         </button>
-        <button onClick={() => onShare(i)} className="msg-act" aria-label="Share">
-          <IconShare size={14} /> Share
-        </button>
-        <button onClick={() => onDownload(i)} className="msg-act" aria-label="Download">
-          <IconDownload size={14} /> Download
-        </button>
-        {showRegen && (
-          <button onClick={() => onRegenerate()} className="msg-act" aria-label="Regenerate answer">
-            <IconRefresh size={14} /> Regenerate
-          </button>
-        )}
       </motion.div>
     </AnimatePresence>
   );

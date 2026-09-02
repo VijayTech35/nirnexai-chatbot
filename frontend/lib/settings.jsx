@@ -6,8 +6,7 @@ export const SETTINGS_KEY = "nirnex_settings";
 
 export const DEFAULT_SETTINGS = {
   assistantName: "NirnexAI Assistant",
-  welcomeMessage:
-    "Hi! I'm **NirnexAI Assistant** — I can help you with pricing, features, modules, integrations, security, and use cases. What would you like to know?",
+  welcomeMessage: "Hi! Ask me about NirnexAI — pricing, features, integrations, security, or how to get started. What can I help you with?",
   brandName: "NirnexAI",
   logoUrl: "",
   theme: "dark",
@@ -19,8 +18,9 @@ export const DEFAULT_SETTINGS = {
   suggestedQuestions: [
     "What is NirnexAI?",
     "Pricing",
-    "Book Demo",
+    "Features",
     "Integrations",
+    "Book Demo",
     "Security",
     "Meeting Intelligence",
     "Dashboard",

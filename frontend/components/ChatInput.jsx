@@ -320,16 +320,8 @@ export default function ChatInput({ inputRef, input, setInput, onSend, busy, onS
             </motion.button>
           )}
         </div>
-        <div className="mt-2.5 flex items-center justify-between gap-3 px-1 text-[11px] text-[var(--ink-3)]">
-          <span className="flex min-w-0 items-center gap-1.5">
-            <kbd className="shrink-0 rounded border border-[var(--line)] bg-[var(--panel-2)] px-1 py-px text-[10px] font-semibold">/</kbd>
-            <span className="hidden sm:inline">commands ·</span>
-            <kbd className="hidden shrink-0 rounded border border-[var(--line)] bg-[var(--panel-2)] px-1 py-px text-[10px] font-semibold sm:inline">Enter</kbd>
-            <span className="hidden sm:inline">to send</span>
-            <kbd className="hidden shrink-0 rounded border border-[var(--line)] bg-[var(--panel-2)] px-1 py-px text-[10px] font-semibold md:inline">Shift+Enter</kbd>
-            <span className="hidden md:inline">new line</span>
-          </span>
-          <span className="hidden truncate sm:inline">{settings.footerText} · answers cite official sources</span>
+        <div className="mt-2 flex justify-center px-1 text-center text-[11px] text-[var(--ink-3)]">
+          Answers are based on the official NirnexAI knowledge base
         </div>
       </div>
     </motion.div>
