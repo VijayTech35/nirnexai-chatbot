@@ -371,7 +371,7 @@ function Chat() {
               <QuickActions onAsk={send} onDemo={() => openLead(true)} onLead={() => openLead(false)} />
               <div className="flex-1" />
               <div className="mt-8">
-<ChatInput inputRef={inputRef} input={input} setInput={setInput} onSend={() => send()} busy={busy} onStop={stop} showSuggestionChips={isStart} />
+<ChatInput inputRef={inputRef} input={input} setInput={setInput} onSend={send} busy={busy} onStop={stop} showSuggestionChips={isStart} />
               </div>
             </motion.main>
           ) : (
@@ -409,7 +409,7 @@ function Chat() {
                 onShare={shareMsg}
                 onDownload={downloadTranscript}
               />
-              <ChatInput inputRef={inputRef} input={input} setInput={setInput} onSend={() => send()} busy={busy} onStop={stop} showSuggestionChips={false} />
+              <ChatInput inputRef={inputRef} input={input} setInput={setInput} onSend={send} busy={busy} onStop={stop} showSuggestionChips={false} />
             </motion.div>
           )}
         </AnimatePresence>

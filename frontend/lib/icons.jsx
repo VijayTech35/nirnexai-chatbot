@@ -37,6 +37,26 @@ export const IconPaperclip = (p) => (
     <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48" />
   </Svg>
 );
+export const IconSmile = (p) => (
+  <Svg {...p}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M8.5 14.5a4 4 0 0 0 7 0" />
+    <path d="M9 9.5h.01M15 9.5h.01" />
+  </Svg>
+);
+export const IconFile = (p) => (
+  <Svg {...p}>
+    <path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7z" />
+    <path d="M14 2v5h5" />
+  </Svg>
+);
+export const IconImage = (p) => (
+  <Svg {...p}>
+    <rect x="3" y="3" width="18" height="18" rx="2" />
+    <circle cx="9" cy="9" r="2" />
+    <path d="m21 15-3.5-3.5L13 16l-3-3-5 5" />
+  </Svg>
+);
 export const IconMic = (p) => (
   <Svg {...p}>
     <rect x="9" y="2.5" width="6" height="11" rx="3" />

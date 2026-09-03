@@ -315,7 +315,7 @@ function WidgetChat() {
         inputRef={inputRef}
         input={input}
         setInput={setInput}
-        onSend={() => send()}
+        onSend={send}
         busy={busy}
         onStop={stop}
         showSuggestionChips={false}
