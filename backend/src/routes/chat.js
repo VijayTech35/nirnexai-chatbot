@@ -225,16 +225,12 @@ router.post("/", chatLimiter, sessionLimiter, async (req, res) => {
     // Analyze the user's intent/sentiment for proactive UX + webhooks.
     const sentiment = detectSentiment(query);
 
-    // Follow-up suggestions are now OPTIONAL and kept subtle. We only send
-    // them (and drop them to 2 max) when they'd genuinely help: a user who
-    // seems confused, or one showing buying intent. Otherwise we send none,
-    // so the chat never pushes a "next question" after every answer.
+    // Follow-up suggestions: expose 2-3 useful next questions after every
+    // answer so the conversation feels guided, not dead-ended. They're proven
+    // to lift engagement; we keep them short (max 3) and context-relevant.
     const matchedCategory = hits[0]?.doc?.meta?.source;
     const allSuggestions = getSuggestions(matchedCategory, query, loadKb());
-    const suggestions =
-      sentiment.sentiment === "confused" || sentiment.intent === "buying"
-        ? allSuggestions.slice(0, 2)
-        : [];
+    const suggestions = allSuggestions.slice(0, 3);
 
     // Fire webhook for high-intent events (buying intent or frustration).
     if (config.webhookUrl) {

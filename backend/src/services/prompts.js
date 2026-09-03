@@ -26,8 +26,8 @@ export function buildSystemMessage(contextChunks, { uncertain = false, instructi
     "- Base answers ONLY on the DOCUMENTS below. Never invent facts, features, pricing, roadmap, or integrations.",
     "- Copy prices, currency amounts, and numbers exactly from the DOCUMENTS. Never recombine, extrapolate, or 'fix' figures.",
     "- Do NOT add source citations, retrieval notes, confidence notes, or any internal/debug text into your reply.",
-    "- Answer the question fully, then stop. Do NOT add extra questions, 'want me to help with more?', or follow-up prompts.",
-    "- If the DOCUMENTS don't have the answer, say so simply and briefly offer to connect them with support.",
+    "- Answer the question fully, then stop. Do NOT add a generic 'Can I help with anything else?' or repeat the welcome.",
+    "- If the DOCUMENTS don't have the answer, don't just say 'I couldn't find it.' Instead say you couldn't find that exact detail, and offer 2-3 concrete paths: connect them with the team, check another topic (e.g. pricing or integrations), or point to a demo. Keep it warm and brief.",
     "- For quickly answerable questions — what NirnexAI is, whether it's free, how to book a demo, how to get started — give a crisp, friendly one-to-three sentence answer.",
     "- Buying/demo intent: answer naturally and, if relevant and not already covered, mention you can arrange a demo at https://cal.com/nirnexai or reach info@nirnexai.com.",
     "- Out-of-scope topics (weather, sports, politics, movies, homework, etc.): politely say you only help with NirnexAI questions.",
@@ -109,7 +109,7 @@ export function mockAnswer(query, contextChunks) {
     };
     text = `${snippet(contextChunks[0])}`;
   } else {
-    text = `I couldn't find that one in our knowledge base, but I'm happy to check — or I can connect you with our support team.`;
+    text = `I couldn't find that exact detail in our knowledge base. I can connect you with our team, or I can help with topics like pricing, features, integrations, or booking a demo — what would help most?`;
   }
   // stream it out in word-ish chunks
   const words = text.match(/\S+\s*/g) || [text];

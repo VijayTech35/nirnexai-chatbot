@@ -191,7 +191,7 @@ function Message({ m, i, last, showEdit, showRegen, onRate, onCopy, onRegenerate
   const streaming = !!m.streaming;
   const content = m.content || (streaming ? "" : "");
   const cits = Array.isArray(m.cits) ? m.cits.filter((c) => c && c.url) : [];
-  const related = Array.isArray(m.suggestions) && m.suggestions.length ? m.suggestions.slice(0, 2) : [];
+  const related = Array.isArray(m.suggestions) && m.suggestions.length ? m.suggestions.slice(0, 3) : [];
   const showSources = !isUser && !streaming && cits.length > 0;
   const showRelated = !isUser && !streaming && last && related.length > 0;
 
